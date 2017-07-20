@@ -1,11 +1,22 @@
 #ifndef MORTRED_DATA_FRAME_H
 #define MORTRED_DATA_FRAME_H
 
+#include <memory>
+#include <vector>
+
 namespace mortred {
 
 class Schema;
+class Expression;
 
 using Row = std::vector<std::shared_ptr<Cell>>;
+
+enum class JoinType {
+  INNER,
+  OUTER,
+  LEFT,
+  RIGHT,
+};
 
 //need lazy?
 class DataFrame {
@@ -28,7 +39,7 @@ public:
     std::shared_ptr<DataFrame> Agg(std::shared_ptr<Expression> expr);
 private:
     std::shared_ptr<Schema> schema_;
-    std::vector<std::shared_ptr<Row>>> rows_;
+    std::vector<std::shared_ptr<Row>> rows_;
 };
 
 }

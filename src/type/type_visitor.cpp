@@ -1,4 +1,6 @@
 #include "type/type_visitor.h"
+#include "type/type.h"
+#include "type/type_exception.h"
 
 namespace mortred {
 
@@ -17,7 +19,6 @@ TYPE_VISITOR_DEFAULT(UInt8Type);
 TYPE_VISITOR_DEFAULT(UInt16Type);
 TYPE_VISITOR_DEFAULT(UInt32Type);
 TYPE_VISITOR_DEFAULT(UInt64Type);
-TYPE_VISITOR_DEFAULT(HalfFloatType);
 TYPE_VISITOR_DEFAULT(FloatType);
 TYPE_VISITOR_DEFAULT(DoubleType);
 TYPE_VISITOR_DEFAULT(StringType);

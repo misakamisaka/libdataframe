@@ -1,11 +1,18 @@
 #ifndef MORTRED_TYPE_H
 #define MORTRED_TYPE_H
 
+#include <memory>
+#include <vector>
+#include "column.h"
+#include "type/type_visitor.h"
+#include "util.h"
+
 namespace mortred {
 
 class Column;
+class TypeVisitor;
 
-enum class Type : int8_t {
+enum class Type : int {
     // A degenerate NULL type represented as 0 bytes/bits
     NA,
 
@@ -53,12 +60,15 @@ enum class Type : int8_t {
     MAP
 };
 
+struct DataType;
+using TypePtr = std::shared_ptr<DataType>;
+
 struct DataType {
-  Type::type type;
+  Type type;
 
   std::vector<std::shared_ptr<Column>> children_;
 
-  explicit DataType(Type::type type) : type(type) {}
+  explicit DataType(Type type) : type(type) {}
 
   virtual ~DataType();
 
@@ -75,57 +85,57 @@ struct DataType {
 
   int num_children() const { return static_cast<int>(children_.size()); }
 
-  virtual Status Accept(TypeVisitor* visitor) const = 0;
+  virtual void Accept(TypeVisitor* visitor) const = 0;
 
   virtual std::string ToString() const = 0;
-
-  virtual IsWiderThan(std::shared_ptr<DataType> data_type) = 0;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(DataType);
 };
 
-typedef std::shared_ptr<DataType> TypePtr;
+enum class IntervalUnit : char;
 
 struct DataTypes {
-  static TypePtr NullType();
-  static TypePtr BooleanType();
-  static TypePtr UInt8Type();
-  static TypePtr Int8Type();
-  static TypePtr UInt16Type();
-  static TypePtr Int16Type();
-  static TypePtr UInt32Type();
-  static TypePtr Int32Type();
-  static TypePtr UInt64Type();
-  static TypePtr Int64Type();
-  static TypePtr FloatType();
-  static TypePtr DoubleType();
-  static TypePtr StringType();
-  static TypePtr BinaryType();
-  static TypePtr DateType();
-  static TypePtr TimestampType();
-  static TypePtr IntervalType();
+  static TypePtr MakeNullType();
+  static TypePtr MakeBooleanType();
+  static TypePtr MakeUInt8Type();
+  static TypePtr MakeInt8Type();
+  static TypePtr MakeUInt16Type();
+  static TypePtr MakeInt16Type();
+  static TypePtr MakeUInt32Type();
+  static TypePtr MakeInt32Type();
+  static TypePtr MakeUInt64Type();
+  static TypePtr MakeInt64Type();
+  static TypePtr MakeFloatType();
+  static TypePtr MakeDoubleType();
+  static TypePtr MakeStringType();
+  static TypePtr MakeBinaryType();
+  static TypePtr MakeDateType();
 
-  //
-  //static TypePtr DecimalType();
-  //static TypePtr ListType();
-  //static TypePtr StructType();
-  //static TypePtr MapType();
+  static TypePtr MakeDecimalType(int precision, int scale);
+  static TypePtr MakeTimestampType();
+  static TypePtr MakeIntervalType(IntervalUnit unit);
+  static TypePtr MakeMapType(const TypePtr& key_type, const TypePtr& value_type, bool value_contains_null = false);
+  static TypePtr MakeListType(const TypePtr& value_type);
+  static TypePtr MakeListType(const std::shared_ptr<Column>& column);
+  static TypePtr MakeStructType(const std::vector<std::shared_ptr<Column>>& columns);
 
   static TypePtr FindTightesetCommonType(TypePtr type1, TypePtr type2);
-  static bool IsInteger(Type::type type_id);
-  static bool IsFloating(Type::type type_id);
+
+  static bool IsInteger(Type type);
+  static bool IsFloating(Type type);
+  static bool IsPrimitive(Type type);
 };
 
 
 struct AtomicType : public DataType {
   using DataType::DataType;
-
-  virtual int bit_width() const = 0;
 };
 
 struct PrimitiveCType : public AtomicType {
   using AtomicType::AtomicType;
+
+  virtual int bit_width() const = 0;
 };
 
 struct Integer : public PrimitiveCType {
@@ -141,16 +151,16 @@ struct NestedType : public DataType {
   using DataType::DataType;
 };
 
-template <typename DERIVED, typename BASE, Type::type TYPE_ID, typename C_TYPE>
+template <typename DERIVED, typename BASE, Type TYPE_ID, typename C_TYPE>
 struct CTypeImpl : public BASE {
   using c_type = C_TYPE;
-  static constexpr Type::type type_id = TYPE_ID;
+  static constexpr Type type_id = TYPE_ID;
 
   CTypeImpl() : BASE(TYPE_ID) {}
 
-  int bit_width() const override { return static_cast<int>(sizeof(C_TYPE) * CHAR_BIT); }
+  int bit_width() const override { return static_cast<int>(sizeof(C_TYPE)); }
 
-  Status Accept(TypeVisitor* visitor) const override {
+  void Accept(TypeVisitor* visitor) const override {
     return visitor->Visit(*static_cast<const DERIVED*>(this));
   }
 
@@ -160,30 +170,31 @@ struct CTypeImpl : public BASE {
 struct NoExtraMeta {};
 
 struct NullType : public DataType, public NoExtraMeta {
-  static constexpr Type::type type_id = Type::NA;
+  static constexpr Type type_id = Type::NA;
 
   NullType() : DataType(Type::NA) {}
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return name(); }
 
   static std::string name() { return "null"; }
 };
 
-template <typename DERIVED, Type::type TYPE_ID, typename C_TYPE>
+template <typename DERIVED, Type TYPE_ID, typename C_TYPE>
 struct IntegerTypeImpl : public CTypeImpl<DERIVED, Integer, TYPE_ID, C_TYPE> {
   bool is_signed() const override { return std::is_signed<C_TYPE>::value; }
 };
 
 struct BooleanType : public AtomicType, public NoExtraMeta {
-  static constexpr Type::type type_id = Type::BOOL;
+  static constexpr Type type_id = Type::BOOL;
+  using c_type = bool;
 
   BooleanType() : AtomicType(Type::BOOL) {}
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override {return name();}
 
-  int bit_width() const override { return 1; }
+  int bit_width() const { return 1; }
   static std::string name() { return "bool"; }
 };
 
@@ -233,7 +244,7 @@ struct DoubleType
 };
 
 struct ListType : public NestedType {
-  static constexpr Type::type type_id = Type::LIST;
+  static constexpr Type type_id = Type::LIST;
 
   // List can contain any other logical value type
   explicit ListType(const TypePtr& value_type)
@@ -245,156 +256,128 @@ struct ListType : public NestedType {
 
   std::shared_ptr<Column> value_column() const { return children_[0]; }
 
-  TypePtr value_type() const { return children_[0]->type; }
+  TypePtr value_type() const { return children_[0]->data_type(); }
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return std::string("list<") + value_column()->ToString() + ">"; }
 
   static std::string name() { return "list"; }
 };
 
-// BinaryType type is represents lists of 1-byte values.
 struct BinaryType : public AtomicType, public NoExtraMeta {
-  static constexpr Type::type type_id = Type::BINARY;
+  static constexpr Type type_id = Type::BINARY;
 
   BinaryType() : BinaryType(Type::BINARY) {}
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return name(); }
   static std::string name() { return "binary"; }
-
  protected:
-  // Allow subclasses to change the logical type.
-  explicit BinaryType(Type::type logical_type) : DataType(logical_type) {}
+  explicit BinaryType(Type logical_type) : AtomicType(logical_type) {}
 };
 
-// UTF-8 encoded strings
 struct StringType : public BinaryType {
-  static constexpr Type::type type_id = Type::STRING;
+  static constexpr Type type_id = Type::STRING;
 
   StringType() : BinaryType(Type::STRING) {}
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
-  static std::string name() { return "utf8"; }
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return name(); }
+  static std::string name() { return "string"; }
 };
 
 struct StructType : public NestedType {
-  static constexpr Type::type type_id = Type::STRUCT;
+  static constexpr Type type_id = Type::STRUCT;
 
   explicit StructType(const std::vector<std::shared_ptr<Column>>& columns)
       : NestedType(Type::STRUCT) {
     children_ = columns;
   }
 
-  Status Accept(TypeVisitor* visitor) const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
   std::string ToString() const override;
   static std::string name() { return "struct"; }
 };
 
 struct DecimalType : public AtomicType {
-  static constexpr Type::type type_id = Type::DECIMAL;
+  static constexpr Type type_id = Type::DECIMAL;
 
   explicit DecimalType(int precision_, int scale_)
-      : DataType(Type::DECIMAL), precision(precision_), scale(scale_) {}
+      : AtomicType(Type::DECIMAL), precision(precision_), scale(scale_) {}
   int precision;
   int scale;
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  bool IsWiderThan(TypePtr type);
+  static TypePtr ForType(TypePtr type);
+  std::string ToString() const override { return std::string("decimal(") + std::to_string(precision) + ", " + std::to_string(scale) + ")"; }
   static std::string name() { return "decimal"; }
 };
 
-// ----------------------------------------------------------------------
-// Date and time types
-
-/// Date as int32_t days since UNIX epoch
 struct DateType : public AtomicType, public NoExtraMeta {
-  static constexpr Type::type type_id = Type::DATE;
+  static constexpr Type type_id = Type::DATE;
 
   using c_type = int32_t;
-  DateType();
+  explicit DateType()
+    : AtomicType(Type::DATE) {}
 
-  int bit_width() const override { return static_cast<int>(sizeof(c_type) * CHAR_BIT); }
+  int bit_width() const { return static_cast<int>(sizeof(c_type)); }
 
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
-};
-
-enum class TimeUnit : char { SECOND = 0, MILLI = 1, MICRO = 2, NANO = 3 };
-
-static inline std::ostream& operator<<(std::ostream& os, TimeUnit unit) {
-  switch (unit) {
-    case TimeUnit::SECOND:
-      os << "s";
-      break;
-    case TimeUnit::MILLI:
-      os << "ms";
-      break;
-    case TimeUnit::MICRO:
-      os << "us";
-      break;
-    case TimeUnit::NANO:
-      os << "ns";
-      break;
-  }
-  return os;
-}
-
-struct TimestampType : public AtomicType {
-  using Unit = TimeUnit;
-
-  typedef int64_t c_type;
-  static constexpr Type::type type_id = Type::TIMESTAMP;
-
-  int bit_width() const override { return static_cast<int>(sizeof(int64_t) * CHAR_BIT); }
-
-  explicit TimestampType(TimeUnit unit = TimeUnit::MILLI)
-      : AtomicType(Type::TIMESTAMP), unit(unit) {}
-
-  Status Accept(TypeVisitor* visitor) const override;
-  std::string ToString() const override;
-  static std::string name() { return "timestamp"; }
-
-  TimeUnit unit;
-};
-
-struct IntervalType : public AtomicType {
-  enum class Unit : char { YEAR_MONTH = 0, DAY_TIME = 1 };
-
-  using c_type = int64_t;
-  static constexpr Type::type type_id = Type::INTERVAL;
-
-  int bit_width() const override { return static_cast<int>(sizeof(int64_t) * CHAR_BIT); }
-
-  Unit unit;
-
-  explicit IntervalType(Unit unit = Unit::YEAR_MONTH)
-      : AtomicType(Type::INTERVAL), unit(unit) {}
-
-  Status Accept(TypeVisitor* visitor) const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
   std::string ToString() const override { return name(); }
   static std::string name() { return "date"; }
+};
+
+struct TimestampType : public AtomicType {
+  using c_type = int64_t;
+  static constexpr Type type_id = Type::TIMESTAMP;
+
+  int bit_width() const { return static_cast<int>(sizeof(c_type)); }
+
+  explicit TimestampType()
+      : AtomicType(Type::TIMESTAMP) {}
+
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return name(); }
+  static std::string name() { return "timestamp"; }
+};
+
+enum class IntervalUnit : char { MONTH = 0, MICROSECOND = 1 };
+struct IntervalType : public AtomicType {
+
+  using c_type = int64_t;
+  static constexpr Type type_id = Type::INTERVAL;
+
+  int bit_width() const { return static_cast<int>(sizeof(c_type)); }
+
+  IntervalUnit unit;
+
+  explicit IntervalType(IntervalUnit unit = IntervalUnit::MONTH)
+      : AtomicType(Type::INTERVAL), unit(unit) {}
+
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
+  std::string ToString() const override { return name(); }
+  static std::string name() { return "interval"; }
 };
 
 // ----------------------------------------------------------------------
 
 class MapType : public NestedType {
  public:
-  static constexpr Type::type type_id = Type::Map;
+  static constexpr Type type_id = Type::MAP;
 
   MapType(const TypePtr& key_type,
-      const TypePtr& value_type, bool value_contains_null = false);
-
-  int bit_width() const override;
+      const TypePtr& value_type, bool value_contains_null = false)
+    : NestedType(Type::MAP), key_type_(key_type), value_type_(value_type),
+    value_contains_null_(value_contains_null) { }
 
   TypePtr key_type() const { return key_type_; }
 
   TypePtr value_type() const { return value_type_; }
 
-  TypePtr value_contains_null() const { return value_contains_null_; }
+  bool value_contains_null() const { return value_contains_null_; }
 
-  Status Accept(TypeVisitor* visitor) const override;
+  void Accept(TypeVisitor* visitor) const override { return visitor->Visit(*this); }
   std::string ToString() const override;
 
  private:

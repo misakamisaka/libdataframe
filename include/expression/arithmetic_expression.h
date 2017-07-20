@@ -2,6 +2,8 @@
 #define MORTRED_ARITHMETIC_EXPRESSION_H
 
 #include "expression.h"
+#include "type/type.h"
+#include "type/type_converter.h"
 
 namespace mortred {
 namespace expression {
@@ -13,7 +15,7 @@ class UnaryMinus : public UnaryExpression {
   virtual std::string ToString() {
     std::string ret;
     ret += "-(";
-    ret += left->ToString();
+    ret += child_->ToString();
     ret += ")";
     return ret;
   }
@@ -26,7 +28,7 @@ class Abs : public UnaryExpression {
   virtual std::string ToString() {
     std::string ret;
     ret += "abs(";
-    ret += left->ToString();
+    ret += child_->ToString();
     ret += ")";
     return ret;
   }
@@ -38,16 +40,16 @@ class BinaryArithmetic : public BinaryExpression {
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual void CheckInputDataTypes();
-}
+};
 
 class Add : public BinaryArithmetic<std::plus, false> {
  public:
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
-    ret += left->ToString();
+    ret += left_->ToString();
     ret += ") + (";
-    ret += right->ToString();
+    ret += right_->ToString();
     ret += ")";
     return ret;
   }
@@ -58,9 +60,9 @@ class Subtract : public BinaryArithmetic<std::minus, false> {
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
-    ret += left->ToString();
+    ret += left_->ToString();
     ret += ") - (";
-    ret += right->ToString();
+    ret += right_->ToString();
     ret += ")";
     return ret;
   }
@@ -71,9 +73,9 @@ class Multiply : public BinaryArithmetic<std::multiplies, false> {
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
-    ret += left->ToString();
+    ret += left_->ToString();
     ret += ") * (";
-    ret += right->ToString();
+    ret += right_->ToString();
     ret += ")";
     return ret;
   }
@@ -84,9 +86,9 @@ class Divide : public BinaryArithmetic<std::divides, true> {
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
-    ret += left->ToString();
+    ret += left_->ToString();
     ret += ") / (";
-    ret += right->ToString();
+    ret += right_->ToString();
     ret += ")";
     return ret;
   }
@@ -97,9 +99,9 @@ class Modulo : public BinaryArithmetic<std::modulus, true> {
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
-    ret += left->ToString();
+    ret += left_->ToString();
     ret += ") % (";
-    ret += right->ToString();
+    ret += right_->ToString();
     ret += ")";
     return ret;
   }
@@ -146,17 +148,17 @@ template<template<typename T> class ArithmeticMethod, bool NeedCheckDivideByZero
 void BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZero>::Resolve(
     std::shared_ptr<Schema> schema) {
   BinaryExpression::Resolve();
-  data_type_ = DataTypes::FindTightesetCommonType(left_>data_type_, right_->data_type_);
+  data_type_ = DataTypes::FindTightesetCommonType(left_->data_type_, right_->data_type_);
   CheckInputDataTypes();
 }
 
 template<template<typename T> class ArithmeticMethod, bool NeedCheckDivideByZero>
 std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZero>::Eval(
     std::shared_ptr<Row> row) {
-  std::shared_ptr<DataField> left_data_field = left_->eval(row);
-  std::shared_ptr<DataField> right_data_field = right_->eval(row);
-  std::shared_ptr<DataField> ret = make_shared<DataField>();
-  ret->cell = make_shared<Cell>();
+  std::shared_ptr<DataField> left_data_field = left_->Eval(row);
+  std::shared_ptr<DataField> right_data_field = right_->Eval(row);
+  std::shared_ptr<DataField> ret = std::make_shared<DataField>();
+  ret->cell = std::make_shared<Cell>();
   ret->cell->is_null = left_data_field->cell->is_null || right_data_field->cell->is_null;
   ret->data_type = data_type_;
   if (ret->cell->is_null) {
@@ -189,7 +191,7 @@ std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZ
     PRIMITIVE_CASE(Type::DOUBLE, double)
     default:
       throw ExpressionException("unsupported Arithmetic, type[ " +
-          std::to_string(data_type_->type) + "]");
+          std::to_string(static_cast<typename std::underlying_type<Type>::type>(data_type_->type)) + "]");
   }
 
 #undef PRIMITIVE_CASE

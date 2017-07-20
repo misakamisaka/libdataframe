@@ -1,7 +1,14 @@
 #ifndef MORTRED_EXPRESSION_H
 #define MORTRED_EXPRESSION_H
 
+#include <memory>
+#include <string>
+#include <vector>
+#include "cell.h"
+#include "data_field.h"
+#include "data_frame.h"
 #include "expression_exception.h"
+#include "schema.h"
 
 namespace mortred {
 namespace expression {
@@ -52,6 +59,8 @@ class Expression {
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row) = 0;
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() = 0;
   virtual std::string ToString() = 0;
+  bool nullable() { return nullable_; }
+  std::shared_ptr<DataType> data_type() { return data_type_; }
  protected:
   bool nullable_;
   std::shared_ptr<DataType> data_type_;

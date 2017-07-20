@@ -8,6 +8,7 @@ namespace expression {
 
 class Parameter : public LeafExpression {
  public:
+  virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
  private:
   size_t index_;
@@ -15,6 +16,7 @@ class Parameter : public LeafExpression {
 
 class Constant : public LeafExpression {
  public:
+  virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
