@@ -31,7 +31,6 @@ std::shared_ptr<DataField> ConstantExpr::Eval(std::shared_ptr<Row>) {
   if (is_null_) {
     data_field->data_type = data_type_;
     data_field->cell = std::make_shared<Cell>();
-    data_field->cell->is_null = is_null_;
   } else {
     data_field = type_cast(data_type_, std::make_shared<DataField>(value_str_));
   }

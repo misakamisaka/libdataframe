@@ -8,22 +8,22 @@ namespace expression {
 
 class BitwiseNot : public UnaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Schema> schema, std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
 class BitwiseAnd : public BinaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Schema> schema, std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
 class BitwiseOr : public BinaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Schema> schema, std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
 class BitwiseXor : public BinaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Schema> schema, std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
 } //namespace expression

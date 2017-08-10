@@ -5,9 +5,7 @@ namespace mortred {
 
 DataField::DataField(const std::string& value) {
   data_type = DataTypes::MakeStringType();
-  cell = std::make_shared<Cell>();
-  cell->is_null = false;
-  cell->value = value;
+  cell = std::make_shared<Cell>(false, value);
 }
 
 std::string DataField::ToString() {

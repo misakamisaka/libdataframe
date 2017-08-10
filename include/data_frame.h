@@ -7,7 +7,11 @@
 namespace mortred {
 
 class Schema;
+class Cell;
+
+namespace expression {
 class Expression;
+}
 
 using Row = std::vector<std::shared_ptr<Cell>>;
 
@@ -18,25 +22,26 @@ enum class JoinType {
   RIGHT,
 };
 
-//need lazy?
 class DataFrame {
 public:
-    //ArrayExpression(ColumnExpression, AliasExpression(ColumnExpression || ConstantExpression || Expression), ...)
-    std::shared_ptr<DataFrame> Select(std::shared_ptr<Expression> expr);
+    //ArrayExpression(ColumnExpr, AliasExpr(ColumnExpr || ConstantExpr || Expression), ...)
+    DataFrame& Select(std::shared_ptr<expression::Expression> expr);
     //PredicateExpression
-    std::shared_ptr<DataFrame> Where(std::shared_ptr<Expression> expr);
-    //ArrayExpression(ColumnExpression, ...)
-    std::shared_ptr<DataFrame> GroupBy(std::shared_ptr<Expression> expr);
-    //ArrayExpression(BinaryExpression(AliasExpression(ColumnExpression), AliasExpression(ColumnExpression)), ...)
-    std::shared_ptr<DataFrame> Join(std::shared_ptr<DataFrame> df,
+    DataFrame& Where(std::shared_ptr<expression::Expression> expr);
+    //ArrayExpression(ColumnExpr, ...)
+    DataFrame& GroupBy(std::shared_ptr<expression::Expression> expr);
+    //ArrayExpression(PairExpression(AliasExpr(ColumnExpr), AliasExpr(ColumnExpr)), ...)
+    DataFrame& Join(const DataFrame& df,
         JoinType join_type,
-        std::shared_ptr<Expression> join_expr);
-    //ArrayExpression(ColumnExpression, ...)
-    std::shared_ptr<DataFrame> OrderBy(std::shared_ptr<Expression> expr);
-    std::shared_ptr<DataFrame> Union(std::shared_ptr<DataFrame> df);
+        std::shared_ptr<expression::Expression> join_expr);
+    //ArrayExpression(ColumnExpr, ...)
+    DataFrame& OrderBy(std::shared_ptr<expression::Expression> expr);
+    DataFrame& Union(const DataFrame& df);
     //avg max min sum count
-    //ArrayExpression(BinaryExpression(ColumnExpression, AggExpression), ...)
-    std::shared_ptr<DataFrame> Agg(std::shared_ptr<Expression> expr);
+    //ArrayExpression(PairExpression(ColumnExpr, AggExpression), ...)
+    DataFrame& Agg(std::shared_ptr<expression::Expression> expr);
+
+    explicit DataFrame(std::shared_ptr<Schema> schema);
 private:
     std::shared_ptr<Schema> schema_;
     std::vector<std::shared_ptr<Row>> rows_;

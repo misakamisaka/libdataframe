@@ -3,6 +3,8 @@
 
 namespace mortred {
 class Decimal {
+ public:
+  std::string ToString();
  private:
   int64_t precision_num_;
   int64_t scale_num_; 

@@ -176,12 +176,12 @@ template<typename T>
 std::shared_ptr<DataField> NumericConverter<T>::ConvertFrom(const std::shared_ptr<DataField>& src) {
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();
   ret->data_type = data_type_;
-  ret->cell = std::make_shared<Cell>();
-  ret->cell->is_null = src->cell->is_null;
+  bool is_null = src->cell->is_null();
+  boost::any value;
 
 #define NUMERIC_CASE(FIELD_TYPE, IN_TYPE) \
   case FIELD_TYPE:                        \
-    ret->cell->value = boost::any(static_cast<typename T::c_type>(boost::any_cast<IN_TYPE>(src->cell->value))); \
+    value = boost::any(static_cast<typename T::c_type>(boost::any_cast<IN_TYPE>(src->cell->value()))); \
     break;
 
   switch (src->data_type->type) {
@@ -199,13 +199,14 @@ std::shared_ptr<DataField> NumericConverter<T>::ConvertFrom(const std::shared_pt
 
     case Type::STRING:
     case Type::BINARY:
-      ret->cell->value = boost::any(my_string_cast<typename T::c_type>(boost::any_cast<std::string>(src->cell->value)));
+      value = boost::any(my_string_cast<typename T::c_type>(boost::any_cast<std::string>(src->cell->value())));
       break;
 
     default:
       throw InvalidCast("unsupported cast");
   }
 #undef NUMERIC_CASE
+  ret->cell = std::make_shared<Cell>(is_null, value);
   return ret;
 }
 
@@ -214,14 +215,14 @@ class StringConverter : public BaseConverter {
   explicit StringConverter(const std::shared_ptr<StringType>& data_type) : data_type_(data_type) { }
   explicit StringConverter(const std::shared_ptr<BinaryType>& data_type) : data_type_(data_type) { }
   virtual std::shared_ptr<DataField> ConvertFrom(const std::shared_ptr<DataField>& src) override {
-  std::shared_ptr<DataField> ret = std::make_shared<DataField>();
-  ret->data_type = data_type_;
-  ret->cell = std::make_shared<Cell>();
-  ret->cell->is_null = src->cell->is_null;
+    std::shared_ptr<DataField> ret = std::make_shared<DataField>();
+    ret->data_type = data_type_;
+    bool is_null = src->cell->is_null();
+    boost::any value;
 
 #define NUMERIC_CASE(FIELD_TYPE, IN_TYPE) \
     case FIELD_TYPE:                      \
-      ret->cell->value = boost::any(std::to_string(boost::any_cast<IN_TYPE>(src->cell->value))); \
+      value = boost::any(std::to_string(boost::any_cast<IN_TYPE>(src->cell->value()))); \
       break;
 
     switch (src->data_type->type) {
@@ -239,12 +240,13 @@ class StringConverter : public BaseConverter {
 
       case Type::STRING:
       case Type::BINARY:
-        ret->cell->value = src->cell->value;
+        value = src->cell->value();
 
       default:
         throw InvalidCast("unsupported cast");
     }
 #undef NUMERIC_CASE
+    ret->cell = std::make_shared<Cell>(is_null, value);
     return ret;
   }
  private:
@@ -253,8 +255,41 @@ class StringConverter : public BaseConverter {
 
 template<typename T>
 std::shared_ptr<DataField> type_cast(const std::shared_ptr<T>& data_type, std::shared_ptr<DataField> data_field) {
-  typename TypeTraits<T>::Converter converter = TypeTraits<T>::Converter(data_type);
-  return converter->ConvertFrom(data_field);
+  typename TypeTraits<T>::ConverterType converter(data_type);
+  return converter.ConvertFrom(data_field);
+}
+inline std::shared_ptr<DataField> type_cast(const std::shared_ptr<DataType>& data_type, std::shared_ptr<DataField> data_field) {
+  switch (data_type->type) {
+    case Type::BOOL:
+      return type_cast(std::static_pointer_cast<BooleanType>(data_type), data_field);
+    case Type::UINT8:
+      return type_cast(std::static_pointer_cast<UInt8Type>(data_type), data_field);
+    case Type::INT8:
+      return type_cast(std::static_pointer_cast<Int8Type>(data_type), data_field);
+    case Type::UINT16:
+      return type_cast(std::static_pointer_cast<UInt16Type>(data_type), data_field);
+    case Type::INT16:
+      return type_cast(std::static_pointer_cast<Int16Type>(data_type), data_field);
+    case Type::UINT32:
+      return type_cast(std::static_pointer_cast<UInt32Type>(data_type), data_field);
+    case Type::INT32:
+      return type_cast(std::static_pointer_cast<Int32Type>(data_type), data_field);
+    case Type::UINT64:
+      return type_cast(std::static_pointer_cast<UInt64Type>(data_type), data_field);
+    case Type::INT64:
+      return type_cast(std::static_pointer_cast<Int64Type>(data_type), data_field);
+    case Type::FLOAT:
+      return type_cast(std::static_pointer_cast<FloatType>(data_type), data_field);
+    case Type::DOUBLE:
+      return type_cast(std::static_pointer_cast<DoubleType>(data_type), data_field);
+    case Type::STRING:
+      return type_cast(std::static_pointer_cast<StringType>(data_type), data_field);
+    case Type::BINARY:
+      return type_cast(std::static_pointer_cast<BinaryType>(data_type), data_field);
+    default:
+      throw InvalidCast("unsupported cast");
+  }
+  return nullptr;
 }
 
 } //namespace mortred

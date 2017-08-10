@@ -8,6 +8,7 @@ namespace mortred {
 
 class DataType;
 
+//column is const
 class Column {
 public:
     Column(const std::string& name, const std::shared_ptr<DataType>& data_type, bool nullable = true)
@@ -23,6 +24,7 @@ public:
 
     std::string name() const { return name_; }
     std::shared_ptr<DataType> data_type() const { return data_type_; }
+    bool nullable() const { return nullable_; }
 private:
     std::string name_;
     std::shared_ptr<DataType> data_type_;

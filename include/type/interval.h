@@ -3,6 +3,8 @@
 
 namespace mortred {
 class Interval {
+ public:
+  std::string ToString();
  private:
   int64_t interval_;
 };

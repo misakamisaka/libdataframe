@@ -8,7 +8,7 @@ class ExpressionException : public MortredException {
 public:
     ExpressionException(const std::string& what_str) 
         : MortredException(what_str) {
-        exception_name_ = "TypeException:";
+        exception_name_ = "ExpressionException:";
     }   
     virtual ~ExpressionException() throw() {}
     virtual const char* what() const throw() {

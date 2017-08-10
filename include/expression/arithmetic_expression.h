@@ -8,9 +8,8 @@
 namespace mortred {
 namespace expression {
 
-class UnaryMinus : public UnaryExpression {
+class UnaryMinusExpr : public UnaryExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
     std::string ret;
@@ -21,9 +20,8 @@ class UnaryMinus : public UnaryExpression {
   }
 };
 
-class Abs : public UnaryExpression {
+class AbsExpr : public UnaryExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
     std::string ret;
@@ -34,77 +32,53 @@ class Abs : public UnaryExpression {
   }
 };
 
-template<template<typename T> class ArithmeticMethod, bool NeedCheckDivideByZero>
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
 class BinaryArithmetic : public BinaryExpression {
- protected:
+ public:
+   BinaryArithmetic(std::shared_ptr<Expression> left,
+       std::shared_ptr<Expression> right)
+     : BinaryExpression(left, right) {
+    node_type_ = node_type;
+  }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
-  virtual void CheckInputDataTypes();
-};
-
-class Add : public BinaryArithmetic<std::plus, false> {
- public:
+  //virtual void CheckInputDataTypes();
   virtual std::string ToString() {
     std::string ret;
     ret += "(";
     ret += left_->ToString();
-    ret += ") + (";
+    ret += ") ";
+    ret += node_type2str_map.at(node_type);
+    ret += " (";
     ret += right_->ToString();
     ret += ")";
     return ret;
   }
 };
 
-class Subtract : public BinaryArithmetic<std::minus, false> {
+class AddExpr : public BinaryArithmetic<std::plus, false, NodeType::ADD> {
  public:
-  virtual std::string ToString() {
-    std::string ret;
-    ret += "(";
-    ret += left_->ToString();
-    ret += ") - (";
-    ret += right_->ToString();
-    ret += ")";
-    return ret;
-  }
+  using BinaryArithmetic::BinaryArithmetic;
 };
 
-class Multiply : public BinaryArithmetic<std::multiplies, false> {
+class SubtractExpr : public BinaryArithmetic<std::minus, false, NodeType::SUB> {
  public:
-  virtual std::string ToString() {
-    std::string ret;
-    ret += "(";
-    ret += left_->ToString();
-    ret += ") * (";
-    ret += right_->ToString();
-    ret += ")";
-    return ret;
-  }
+  using BinaryArithmetic::BinaryArithmetic;
 };
 
-class Divide : public BinaryArithmetic<std::divides, true> {
+class MultiplyExpr : public BinaryArithmetic<std::multiplies, false, NodeType::MUL> {
  public:
-  virtual std::string ToString() {
-    std::string ret;
-    ret += "(";
-    ret += left_->ToString();
-    ret += ") / (";
-    ret += right_->ToString();
-    ret += ")";
-    return ret;
-  }
+  using BinaryArithmetic::BinaryArithmetic;
 };
 
-class Modulo : public BinaryArithmetic<std::modulus, true> {
+class DivideExpr : public BinaryArithmetic<std::divides, true, NodeType::DIV> {
  public:
-  virtual std::string ToString() {
-    std::string ret;
-    ret += "(";
-    ret += left_->ToString();
-    ret += ") % (";
-    ret += right_->ToString();
-    ret += ")";
-    return ret;
-  }
+  using BinaryArithmetic::BinaryArithmetic;
+};
+
+class ModuloExpr : public BinaryArithmetic<std::modulus, true, NodeType::MOD> {
+ public:
+  using BinaryArithmetic::BinaryArithmetic;
 };
 
 class ArrayExpressionWithInputTypeCheck : public ArrayExpression {
@@ -112,7 +86,7 @@ class ArrayExpressionWithInputTypeCheck : public ArrayExpression {
   virtual void Resolve(std::shared_ptr<Schema> schema);
 };
 
-class Least : public ArrayExpressionWithInputTypeCheck {
+class LeastExpr : public ArrayExpressionWithInputTypeCheck {
  public:
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
@@ -128,7 +102,7 @@ class Least : public ArrayExpressionWithInputTypeCheck {
   }
 };
 
-class Greatest : public ArrayExpressionWithInputTypeCheck {
+class GreatestExpr : public ArrayExpressionWithInputTypeCheck {
  public:
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
@@ -144,24 +118,25 @@ class Greatest : public ArrayExpressionWithInputTypeCheck {
   }
 };
 
-template<template<typename T> class ArithmeticMethod, bool NeedCheckDivideByZero>
-void BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZero>::Resolve(
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
+void BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, node_type>::Resolve(
     std::shared_ptr<Schema> schema) {
-  BinaryExpression::Resolve();
-  data_type_ = DataTypes::FindTightesetCommonType(left_->data_type_, right_->data_type_);
-  CheckInputDataTypes();
+  BinaryExpression::Resolve(schema);
+  data_type_ = DataTypes::FindTightesetCommonType(left_->data_type(), right_->data_type());
+  //CheckInputDataTypes();
 }
 
-template<template<typename T> class ArithmeticMethod, bool NeedCheckDivideByZero>
-std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZero>::Eval(
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
+std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, node_type>::Eval(
     std::shared_ptr<Row> row) {
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();
-  ret->cell = std::make_shared<Cell>();
-  ret->cell->is_null = left_data_field->cell->is_null || right_data_field->cell->is_null;
+  bool is_null = left_data_field->cell->is_null() || right_data_field->cell->is_null();
+  boost::any value;
   ret->data_type = data_type_;
-  if (ret->cell->is_null) {
+  if (is_null) {
+    ret->cell = std::make_shared<Cell>(is_null, value);
     return ret;
   }
   left_data_field = type_cast(data_type_, left_data_field);
@@ -169,12 +144,12 @@ std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZ
 
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                                       \
   case FIELD_TYPE: {                                                             \
-    C_TYPE left_value = boost::any_cast<C_TYPE>(left_data_field->cell->value);   \
-    C_TYPE right_value = boost::any_cast<C_TYPE>(right_data_field->cell->value); \
-    if (NeedCheckDivideByZero && right_value == 0) {                             \
+    C_TYPE left_value = boost::any_cast<C_TYPE>(left_data_field->cell->value());   \
+    C_TYPE right_value = boost::any_cast<C_TYPE>(right_data_field->cell->value()); \
+    if (need_check_divide_by_zero && right_value == 0) {                             \
       throw ExpressionException("DivideByZero in ArithmeticExpression");         \
     }                                                                            \
-    ret->cell->value = ArithmeticMethod<C_TYPE>{}(left_value, right_value);      \
+    value = ArithmeticMethod<C_TYPE>{}(left_value, right_value);      \
     break;                                                                       \
   }
 
@@ -195,7 +170,7 @@ std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, NeedCheckDivideByZ
   }
 
 #undef PRIMITIVE_CASE
-
+  ret->cell = std::make_shared<Cell>(is_null, value);
   return ret;
 }
 

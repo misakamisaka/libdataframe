@@ -3,6 +3,8 @@
 
 namespace mortred {
 class Date {
+ public:
+  std::string ToString();
  private:
   //             year      |m   |d
   //00000000000000000000000|0000|00000

@@ -6,8 +6,12 @@
 namespace mortred {
 namespace expression {
 
-class Column : public LeafExpression {
+class ColumnExpr : public LeafExpression {
  public:
+  ColumnExpr(const std::string column_name)
+    : column_name_(column_name) {
+    node_type_ = NodeType::COLUMN;
+  }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
@@ -15,17 +19,39 @@ class Column : public LeafExpression {
   }
  private:
   std::string column_name_;
+  int index_;
 };
 
-class Alias : public UnaryExpression {
+class AliasExpr : public UnaryExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  AliasExpr(std::shared_ptr<Expression> child, const std::string alias_name)
+    : UnaryExpression(child), alias_name_(alias_name) {
+    node_type_ = NodeType::ALIAS;
+  }
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
   virtual std::string ToString() {
     return child_->ToString() + "AS" + alias_name_;
   }
  private:
   std::string alias_name_;
+};
+
+class ConstantExpr : public LeafExpression {
+ public:
+  ConstantExpr(bool is_null, const std::string value_str, std::shared_ptr<DataType> data_type)
+    : is_null_(is_null), value_str_(value_str) {
+    data_type_ = data_type;
+    nullable_ = is_null;
+    node_type_ = NodeType::CONSTANT;
+  }
+  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+  virtual std::string ToString() {
+    return value_str_;
+  }
+ private:
+  bool is_null_;
+  std::string value_str_;
 };
 
 } //namespace expression

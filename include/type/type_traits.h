@@ -44,7 +44,7 @@ struct TypeTraits<UInt8Type> {
 
 template <>
 struct TypeTraits<Int8Type> {
-  using Converterype = Int8Converter;
+  using ConverterType = Int8Converter;
   constexpr static bool is_parameter_free = true;
   static inline std::shared_ptr<DataType> type_singleton() { return DataTypes::MakeInt8Type(); }
 };
