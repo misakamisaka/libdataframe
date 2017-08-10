@@ -9,14 +9,14 @@ namespace expression {
 class ColumnExpr : public LeafExpression {
  public:
   ColumnExpr(const std::string column_name)
-    : column_name_(column_name) {
-    node_type_ = NodeType::COLUMN;
-  }
+    :LeafExpression(NodeType::COLUMN),
+    column_name_(column_name) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
     return "$" + column_name_;
   }
+  std::string column_name() const { return column_name_; }
  private:
   std::string column_name_;
   int index_;
@@ -25,13 +25,13 @@ class ColumnExpr : public LeafExpression {
 class AliasExpr : public UnaryExpression {
  public:
   AliasExpr(std::shared_ptr<Expression> child, const std::string alias_name)
-    : UnaryExpression(child), alias_name_(alias_name) {
-    node_type_ = NodeType::ALIAS;
-  }
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+    :UnaryExpression(child, NodeType::COLUMN),
+    alias_name_(alias_name) { }
+  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::string ToString() {
     return child_->ToString() + "AS" + alias_name_;
   }
+  std::string alias_name() const { return alias_name_; }
  private:
   std::string alias_name_;
 };
@@ -39,10 +39,11 @@ class AliasExpr : public UnaryExpression {
 class ConstantExpr : public LeafExpression {
  public:
   ConstantExpr(bool is_null, const std::string value_str, std::shared_ptr<DataType> data_type)
-    : is_null_(is_null), value_str_(value_str) {
+    :LeafExpression(NodeType::CONSTANT),
+    is_null_(is_null),
+    value_str_(value_str) {
     data_type_ = data_type;
     nullable_ = is_null;
-    node_type_ = NodeType::CONSTANT;
   }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);

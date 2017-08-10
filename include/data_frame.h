@@ -7,13 +7,12 @@
 namespace mortred {
 
 class Schema;
-class Cell;
+class Row;
 
 namespace expression {
 class Expression;
 }
 
-using Row = std::vector<std::shared_ptr<Cell>>;
 
 enum class JoinType {
   INNER,
@@ -30,7 +29,7 @@ public:
     DataFrame& Where(std::shared_ptr<expression::Expression> expr);
     //ArrayExpression(ColumnExpr, ...)
     DataFrame& GroupBy(std::shared_ptr<expression::Expression> expr);
-    //ArrayExpression(PairExpression(AliasExpr(ColumnExpr), AliasExpr(ColumnExpr)), ...)
+    //ArrayExpression(PairExpression(ColumnExpr, ColumnExpr), ...)
     DataFrame& Join(const DataFrame& df,
         JoinType join_type,
         std::shared_ptr<expression::Expression> join_expr);

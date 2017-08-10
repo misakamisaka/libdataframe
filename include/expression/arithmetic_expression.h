@@ -32,14 +32,12 @@ class AbsExpr : public UnaryExpression {
   }
 };
 
-template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
 class BinaryArithmetic : public BinaryExpression {
  public:
    BinaryArithmetic(std::shared_ptr<Expression> left,
        std::shared_ptr<Expression> right)
-     : BinaryExpression(left, right) {
-    node_type_ = node_type;
-  }
+     : BinaryExpression(left, right, NodeTypeId) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   //virtual void CheckInputDataTypes();
@@ -48,7 +46,7 @@ class BinaryArithmetic : public BinaryExpression {
     ret += "(";
     ret += left_->ToString();
     ret += ") ";
-    ret += node_type2str_map.at(node_type);
+    ret += node_type2str_map.at(node_type_);
     ret += " (";
     ret += right_->ToString();
     ret += ")";
@@ -78,7 +76,7 @@ class DivideExpr : public BinaryArithmetic<std::divides, true, NodeType::DIV> {
 
 class ModuloExpr : public BinaryArithmetic<std::modulus, true, NodeType::MOD> {
  public:
-  using BinaryArithmetic::BinaryArithmetic;
+  //using BinaryArithmetic::BinaryArithmetic;
 };
 
 class ArrayExpressionWithInputTypeCheck : public ArrayExpression {
@@ -118,16 +116,16 @@ class GreatestExpr : public ArrayExpressionWithInputTypeCheck {
   }
 };
 
-template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
-void BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, node_type>::Resolve(
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
+void BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, NodeTypeId>::Resolve(
     std::shared_ptr<Schema> schema) {
   BinaryExpression::Resolve(schema);
   data_type_ = DataTypes::FindTightesetCommonType(left_->data_type(), right_->data_type());
   //CheckInputDataTypes();
 }
 
-template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType node_type>
-std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, node_type>::Eval(
+template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
+std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, NodeTypeId>::Eval(
     std::shared_ptr<Row> row) {
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);

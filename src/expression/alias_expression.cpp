@@ -1,9 +1,10 @@
 #include "expression/alias_expression.h"
-#include "expression/expression_exception.h"
-#include "type/type_converter.h"
-#include "schema.h"
-#include "column.h"
 #include <glog/logging.h>
+#include "column.h"
+#include "expression/expression_exception.h"
+#include "row.h"
+#include "schema.h"
+#include "type/type_converter.h"
 
 namespace mortred {
 namespace expression{
@@ -20,8 +21,8 @@ std::shared_ptr<DataField> ColumnExpr::Eval(std::shared_ptr<Row> row) {
   data_field->cell = row->at(index_);
   return data_field;
 }
-std::shared_ptr<DataField> AliasExpr::Eval(std::shared_ptr<Row>) {
-  throw ExpressionException("cannot eval expression[alias]");
+std::shared_ptr<DataField> AliasExpr::Eval(std::shared_ptr<Row> row) {
+  return child_->Eval(row);
 }
 void ConstantExpr::Resolve(std::shared_ptr<Schema> schema) {
   LeafExpression::Resolve(schema);

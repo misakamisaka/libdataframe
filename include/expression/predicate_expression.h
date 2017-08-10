@@ -14,14 +14,12 @@ class Not : public UnaryExpression {
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
 };
 
-template<template<typename T> class PredicateMethod, NodeType node_type, typename BinaryPredicateResolvePolicy>
+template<template<typename T> class PredicateMethod, NodeType NodeTypeId, typename BinaryPredicateResolvePolicy>
 class BinaryPredicate : public BinaryExpression, public BinaryPredicateResolvePolicy {
  public:
    BinaryPredicate(std::shared_ptr<Expression> left,
        std::shared_ptr<Expression> right)
-     : BinaryExpression(left, right) {
-    node_type_ = node_type;
-  }
+     : BinaryExpression(left, right, NodeTypeId) { }
   virtual void Resolve(std::shared_ptr<Schema> schema) {
     BinaryExpression::Resolve(schema);
     BinaryPredicateResolvePolicy::Resolve(schema, left_, right_);
@@ -33,7 +31,7 @@ class BinaryPredicate : public BinaryExpression, public BinaryPredicateResolvePo
     ret += "(";
     ret += left_->ToString();
     ret += ") ";
-    ret += node_type2str_map.at(node_type);
+    ret += node_type2str_map.at(node_type_);
     ret += " (";
     ret += right_->ToString();
     ret += ")";
@@ -107,8 +105,8 @@ class NotIn : public BinaryExpression {
   }
 };
 
-template<template<typename T> class PredicateMethod, NodeType node_type, typename BinaryPredicateResolvePolicy> 
-std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, node_type, BinaryPredicateResolvePolicy>::Eval(std::shared_ptr<Row> row) {
+template<template<typename T> class PredicateMethod, NodeType NodeTypeId, typename BinaryPredicateResolvePolicy> 
+std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPredicateResolvePolicy>::Eval(std::shared_ptr<Row> row) {
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();
