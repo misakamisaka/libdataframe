@@ -15,6 +15,9 @@ struct DataField {
   std::shared_ptr<Cell> cell;
   std::shared_ptr<DataType> data_type;
   std::string ToString();
+  bool LessThan(const std::shared_ptr<DataField>& data_field);
+  bool GreaterThan(const std::shared_ptr<DataField>& data_field);
+  bool Equal(const std::shared_ptr<DataField>& data_field);
 };
 
 }

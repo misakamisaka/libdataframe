@@ -3,7 +3,7 @@
 namespace mortred {
 namespace expression {
 
-void LeafExpression::Resolve(std::shared_ptr<Schema> schema) {
+void LeafExpression::Resolve(std::shared_ptr<Schema>) {
   nullable_ = true;
   resolved_ = true;
 }
@@ -59,13 +59,13 @@ void ArrayExpression::Resolve(std::shared_ptr<Schema> schema) {
   resolved_ = true;
 }
 
-std::shared_ptr<DataField> PairExpression::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> PairExpression::Eval(std::shared_ptr<Row>) {
       throw ExpressionException("PairExpression does not support Eval");
 }
 std::string PairExpression::ToString() {
   return "pair(" + left_->ToString() + ", " + right_->ToString() + ")";
 }
-std::shared_ptr<DataField> ArrayExpression::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> ArrayExpression::Eval(std::shared_ptr<Row>) {
       throw ExpressionException("ArrayExpression does not support Eval");
 }
 std::string ArrayExpression::ToString() {

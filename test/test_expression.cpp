@@ -63,7 +63,6 @@ public:
 };
 
 TEST_F(ExpressionTest, test_add) {
-/*
     //test int param add param
     {
         std::shared_ptr<ColumnExpr> param1 = std::make_shared<ColumnExpr>("A");
@@ -119,7 +118,6 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<DataField> result = expression->Eval(row);
         ASSERT_TRUE(boost::any_cast<bool>(result->cell->value()));
     }
-*/
     {
         std::shared_ptr<ColumnExpr> param1 = std::make_shared<ColumnExpr>("A");
         std::shared_ptr<ColumnExpr> param2 = std::make_shared<ColumnExpr>("D");

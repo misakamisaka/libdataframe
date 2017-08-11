@@ -254,11 +254,11 @@ class StringConverter : public BaseConverter {
 };
 
 template<typename T>
-std::shared_ptr<DataField> type_cast(const std::shared_ptr<T>& data_type, std::shared_ptr<DataField> data_field) {
+std::shared_ptr<DataField> type_cast(const std::shared_ptr<T>& data_type, const std::shared_ptr<DataField>& data_field) {
   typename TypeTraits<T>::ConverterType converter(data_type);
   return converter.ConvertFrom(data_field);
 }
-inline std::shared_ptr<DataField> type_cast(const std::shared_ptr<DataType>& data_type, std::shared_ptr<DataField> data_field) {
+inline std::shared_ptr<DataField> type_cast(const std::shared_ptr<DataType>& data_type, const std::shared_ptr<DataField>& data_field) {
   switch (data_type->type) {
     case Type::BOOL:
       return type_cast(std::static_pointer_cast<BooleanType>(data_type), data_field);

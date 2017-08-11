@@ -111,7 +111,7 @@ class LeafExpression : public Expression {
 class UnaryExpression : public Expression {
  public:
   explicit UnaryExpression(std::shared_ptr<Expression> child, NodeType node_type)
-    :child_(child), Expression(node_type) {}
+    :Expression(node_type), child_(child) {}
   virtual void Resolve(std::shared_ptr<Schema> schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
@@ -128,7 +128,7 @@ class BinaryExpression : public Expression {
    BinaryExpression(std::shared_ptr<Expression> left,
        std::shared_ptr<Expression> right,
        NodeType node_type)
-     :left_(left), right_(right), Expression(node_type) {}
+     :Expression(node_type), left_(left), right_(right) {}
   virtual void Resolve(std::shared_ptr<Schema> schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
@@ -148,7 +148,7 @@ class TenaryExpression : public Expression {
        std::shared_ptr<Expression> child2,
        std::shared_ptr<Expression> child3,
        NodeType node_type)
-     :child1_(child1), child2_(child2), child3_(child3), Expression(node_type) {}
+     :Expression(node_type), child1_(child1), child2_(child2), child3_(child3) {}
   virtual void Resolve(std::shared_ptr<Schema> schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
@@ -176,7 +176,7 @@ class PairExpression : public BinaryExpression {
 class ArrayExpression : public Expression {
  public:
   explicit ArrayExpression(std::vector<std::shared_ptr<Expression>> children)
-  :children_(children), Expression(NodeType::ARRAY) { }
+  :Expression(NodeType::ARRAY), children_(children) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
   virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
