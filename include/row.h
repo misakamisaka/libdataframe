@@ -11,6 +11,7 @@ class Row {
   Row(const std::vector<std::shared_ptr<Cell>>& cells)
     :cells_(cells) {}
   std::shared_ptr<Cell> at(size_t index) const { return cells_.at(index); }
+  size_t size() const { return cells_.size(); }
  private:
   std::vector<std::shared_ptr<Cell>> cells_;
 };

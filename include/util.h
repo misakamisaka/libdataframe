@@ -7,4 +7,10 @@
   TypeName& operator=(const TypeName&) = delete
 #endif
 
+#define ASSERT_EXPR_TYPE(expr, expected_node_type)                        \
+  if (expr->node_type() != expected_node_type) {                          \
+    LOG(INFO) << "not supported expression type";                         \
+    throw DataFrameException("not supported expression type");            \
+  }
+
 #endif

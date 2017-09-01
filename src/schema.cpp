@@ -26,4 +26,15 @@ int Schema::GetIndexByName(const std::string& name) {
     return it->second;
   }
 }
+bool Schema::Equals(std::shared_ptr<Schema> schema) {
+  if (columns_.size() != schema->columns_.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < columns_.size(); ++i) {
+    if (!columns_[i]->Equals(schema->columns_[i])) {
+      return false;
+    }
+  }
+  return true;
+}
 }

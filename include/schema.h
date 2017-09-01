@@ -21,6 +21,7 @@ class Schema {
   const std::shared_ptr<Column>& GetColumnByIndex(size_t index) const { return columns_[index]; }
   std::shared_ptr<Column>& GetColumnByName(const std::string& name);
   int GetIndexByName(const std::string& name);
+  bool Equals(std::shared_ptr<Schema> schema);
  private:
   std::vector<std::shared_ptr<Column>> columns_;
   std::unordered_map<std::string, size_t> name_to_index_;

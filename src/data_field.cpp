@@ -57,4 +57,13 @@ bool DataField::GreaterThan(const std::shared_ptr<DataField>& data_field) {
 bool DataField::Equal(const std::shared_ptr<DataField>& data_field) {
   return data_field_compare<std::equal_to>(*this, *data_field);
 }
+bool DataField::LessThan(const DataField& data_field) {
+  return data_field_compare<std::less>(*this, data_field);
+}
+bool DataField::GreaterThan(const DataField& data_field) {
+  return data_field_compare<std::greater>(*this, data_field);
+}
+bool DataField::Equal(const DataField& data_field) {
+  return data_field_compare<std::equal_to>(*this, data_field);
+}
 }
