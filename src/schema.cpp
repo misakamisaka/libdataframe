@@ -3,8 +3,8 @@
 #include "schema_exception.h"
 
 namespace mortred {
-Schema::Schema(const std::vector<std::shared_ptr<Column>>& columns)
-  :columns_(columns) {
+Schema::Schema(const std::vector<std::shared_ptr<Column>>& columns, size_t group_column_size)
+  :columns_(columns), group_column_size_(group_column_size) {
   for (size_t i = 0; i < columns_.size(); ++i) {
     name_to_index_[columns_[i]->name()] = static_cast<int>(i);
   }

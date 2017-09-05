@@ -59,13 +59,13 @@ void ArrayExpression::Resolve(std::shared_ptr<Schema> schema) {
   resolved_ = true;
 }
 
-std::shared_ptr<DataField> PairExpression::Eval(std::shared_ptr<Row>) {
+std::shared_ptr<DataField> PairExpression::Eval(const std::shared_ptr<Row>&) const {
       throw ExpressionException("PairExpression does not support Eval");
 }
 std::string PairExpression::ToString() {
   return "pair(" + left_->ToString() + ", " + right_->ToString() + ")";
 }
-std::shared_ptr<DataField> ArrayExpression::Eval(std::shared_ptr<Row>) {
+std::shared_ptr<DataField> ArrayExpression::Eval(const std::shared_ptr<Row>&) const {
       throw ExpressionException("ArrayExpression does not support Eval");
 }
 std::string ArrayExpression::ToString() {

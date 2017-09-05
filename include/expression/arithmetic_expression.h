@@ -10,7 +10,7 @@ namespace expression {
 
 class UnaryMinusExpr : public UnaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     std::string ret;
     ret += "-(";
@@ -22,7 +22,7 @@ class UnaryMinusExpr : public UnaryExpression {
 
 class AbsExpr : public UnaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     std::string ret;
     ret += "abs(";
@@ -39,7 +39,7 @@ class BinaryArithmetic : public BinaryExpression {
        std::shared_ptr<Expression> right)
      : BinaryExpression(left, right, NodeTypeId) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   //virtual void CheckInputDataTypes();
   virtual std::string ToString() {
     std::string ret;
@@ -86,7 +86,7 @@ class ArrayExpressionWithInputTypeCheck : public ArrayExpression {
 
 class LeastExpr : public ArrayExpressionWithInputTypeCheck {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     std::string ret;
     ret += "least(";
@@ -102,7 +102,7 @@ class LeastExpr : public ArrayExpressionWithInputTypeCheck {
 
 class GreatestExpr : public ArrayExpressionWithInputTypeCheck {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     std::string ret;
     ret += "greatest(";
@@ -126,7 +126,7 @@ void BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, NodeTypeId>::
 
 template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
 std::shared_ptr<DataField> BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, NodeTypeId>::Eval(
-    std::shared_ptr<Row> row) {
+    const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();

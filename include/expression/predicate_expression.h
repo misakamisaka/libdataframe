@@ -11,7 +11,7 @@ namespace expression {
 
 class Not : public UnaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
 };
 
 template<template<typename T> class PredicateMethod, NodeType NodeTypeId, typename BinaryPredicateResolvePolicy>
@@ -24,7 +24,7 @@ class BinaryPredicate : public BinaryExpression, public BinaryPredicateResolvePo
     BinaryExpression::Resolve(schema);
     BinaryPredicateResolvePolicy::Resolve(schema, left_, right_);
   }
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   //virtual void CheckInputDataTypes();
   virtual std::string ToString() {
     std::string ret;
@@ -92,7 +92,7 @@ class NotEqualTo : public BinaryPredicate<std::not_equal_to, NodeType::NE, Compa
 class In : public BinaryExpression {
  public:
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
   }
 };
@@ -100,13 +100,13 @@ class In : public BinaryExpression {
 class NotIn : public BinaryExpression {
  public:
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
   }
 };
 
 template<template<typename T> class PredicateMethod, NodeType NodeTypeId, typename BinaryPredicateResolvePolicy> 
-std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPredicateResolvePolicy>::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPredicateResolvePolicy>::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();

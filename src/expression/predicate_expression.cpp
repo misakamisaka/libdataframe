@@ -3,7 +3,7 @@
 
 namespace mortred {
 namespace expression {
-std::shared_ptr<DataField> Not::Eval(std::shared_ptr<Row>) {
+std::shared_ptr<DataField> Not::Eval(const std::shared_ptr<Row>&) const {
 }
 
 void LogicalPredicateResolvePolicy::Resolve(
@@ -27,12 +27,12 @@ void ComparisonPredicateResolvePolicy::Resolve(
 
 void In::Resolve(std::shared_ptr<Schema> schema) {
 }
-std::shared_ptr<DataField> In::Eval(std::shared_ptr<Row>) {
+std::shared_ptr<DataField> In::Eval(const std::shared_ptr<Row>&) const {
 }
 
 void NotIn::Resolve(std::shared_ptr<Schema> schema) {
 }
-std::shared_ptr<DataField> NotIn::Eval(std::shared_ptr<Row>) {
+std::shared_ptr<DataField> NotIn::Eval(const std::shared_ptr<Row>&) const {
 }
 
 }

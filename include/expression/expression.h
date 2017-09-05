@@ -84,7 +84,7 @@ class Expression {
  public:
   explicit Expression(NodeType node_type) : node_type_(node_type) {}
   virtual void Resolve(std::shared_ptr<Schema> schema) = 0;
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row) = 0;
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const = 0;
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() = 0;
   virtual std::string ToString() = 0;
   bool nullable() const { return nullable_; }
@@ -169,7 +169,7 @@ class PairExpression : public BinaryExpression {
    PairExpression(std::shared_ptr<Expression> left,
        std::shared_ptr<Expression> right)
      :BinaryExpression(left, right, NodeType::PAIR) {}
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString();
 };
 
@@ -178,7 +178,7 @@ class ArrayExpression : public Expression {
   explicit ArrayExpression(std::vector<std::shared_ptr<Expression>> children)
   :Expression(NodeType::ARRAY), children_(children) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return children_;
   }

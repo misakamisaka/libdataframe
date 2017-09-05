@@ -12,11 +12,12 @@ class ColumnExpr : public LeafExpression {
     :LeafExpression(NodeType::COLUMN),
     column_name_(column_name) { }
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     return "$" + column_name_;
   }
   std::string column_name() const { return column_name_; }
+  int index() const { return index_; }
  private:
   std::string column_name_;
   int index_;
@@ -27,7 +28,7 @@ class AliasExpr : public UnaryExpression {
   AliasExpr(std::shared_ptr<Expression> child, const std::string alias_name)
     :UnaryExpression(child, NodeType::COLUMN),
     alias_name_(alias_name) { }
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     return child_->ToString() + "AS" + alias_name_;
   }
@@ -46,7 +47,7 @@ class ConstantExpr : public LeafExpression {
     nullable_ = is_null;
   }
   virtual void Resolve(std::shared_ptr<Schema> schema);
-  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row>);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
     return value_str_;
   }

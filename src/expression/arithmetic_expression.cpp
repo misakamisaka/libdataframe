@@ -4,7 +4,7 @@ using std::make_shared;
 
 namespace mortred {
 namespace expression {
-std::shared_ptr<DataField> UnaryMinusExpr::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> UnaryMinusExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> child_data_field = child_->Eval(row);
   std::shared_ptr<DataField> ret = make_shared<DataField>();
   bool is_null = child_data_field->cell->is_null();
@@ -42,7 +42,7 @@ std::shared_ptr<DataField> UnaryMinusExpr::Eval(std::shared_ptr<Row> row) {
   return ret;
 }
 
-std::shared_ptr<DataField> AbsExpr::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> AbsExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> child_data_field = child_->Eval(row);
   std::shared_ptr<DataField> ret = make_shared<DataField>();
   bool is_null = child_data_field->cell->is_null();
@@ -91,7 +91,7 @@ void ArrayExpressionWithInputTypeCheck::Resolve(std::shared_ptr<Schema> schema) 
   }
 }
 
-std::shared_ptr<DataField> LeastExpr::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> LeastExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::vector<std::shared_ptr<DataField>> data_fields;
   for (auto& child : children_) {
     data_fields.push_back(child->Eval(row));
@@ -139,7 +139,7 @@ std::shared_ptr<DataField> LeastExpr::Eval(std::shared_ptr<Row> row) {
   return ret;
 }
 
-std::shared_ptr<DataField> GreatestExpr::Eval(std::shared_ptr<Row> row) {
+std::shared_ptr<DataField> GreatestExpr::Eval(const std::shared_ptr<Row>& row) const{
   std::vector<std::shared_ptr<DataField>> data_fields;
   for (auto& child : children_) {
     data_fields.push_back(child->Eval(row));
