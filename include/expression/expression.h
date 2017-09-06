@@ -16,6 +16,7 @@ namespace expression {
 
 enum class NodeType {
     ADD,                // +
+    AGG,
     ALIAS,
     AND_ALSO,           // &&
     ARRAY,
@@ -83,7 +84,7 @@ const static std::map<NodeType, std::string> node_type2str_map =
 class Expression {
  public:
   explicit Expression(NodeType node_type) : node_type_(node_type) {}
-  virtual void Resolve(std::shared_ptr<Schema> schema) = 0;
+  virtual void Resolve(const std::shared_ptr<Schema>& schema) = 0;
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const = 0;
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() = 0;
   virtual std::string ToString() = 0;
@@ -100,7 +101,7 @@ class Expression {
 class LeafExpression : public Expression {
  public:
   using Expression::Expression;
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return std::vector<std::shared_ptr<Expression>>();
@@ -112,7 +113,7 @@ class UnaryExpression : public Expression {
  public:
   explicit UnaryExpression(std::shared_ptr<Expression> child, NodeType node_type)
     :Expression(node_type), child_(child) {}
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return {child_};
@@ -129,7 +130,7 @@ class BinaryExpression : public Expression {
        std::shared_ptr<Expression> right,
        NodeType node_type)
      :Expression(node_type), left_(left), right_(right) {}
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return {left_, right_};
@@ -149,7 +150,7 @@ class TenaryExpression : public Expression {
        std::shared_ptr<Expression> child3,
        NodeType node_type)
      :Expression(node_type), child1_(child1), child2_(child2), child3_(child3) {}
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
 //  virtual std::shared_ptr<DataField> Eval(std::shared_ptr<Row> row);
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return {child1_, child2_, child3_};
@@ -177,7 +178,7 @@ class ArrayExpression : public Expression {
  public:
   explicit ArrayExpression(std::vector<std::shared_ptr<Expression>> children)
   :Expression(NodeType::ARRAY), children_(children) { }
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::vector<std::shared_ptr<Expression>> GetChildren() {
     return children_;

@@ -49,21 +49,42 @@ std::string DataField::ToString() {
 }
 
 bool DataField::LessThan(const std::shared_ptr<DataField>& data_field) {
-  return data_field_compare<std::less>(*this, *data_field);
+  return LessThan(*data_field);
 }
 bool DataField::GreaterThan(const std::shared_ptr<DataField>& data_field) {
-  return data_field_compare<std::greater>(*this, *data_field);
+  return GreaterThan(*data_field);
 }
 bool DataField::Equal(const std::shared_ptr<DataField>& data_field) {
-  return data_field_compare<std::equal_to>(*this, *data_field);
+  return Equal(*data_field);
 }
 bool DataField::LessThan(const DataField& data_field) {
+  if (cell->is_null() && data_field.cell->is_null()) {
+    return false;
+  } else if (cell->is_null()) {
+    return true;
+  } else if (data_field.cell->is_null()) {
+    return false;
+  }
   return data_field_compare<std::less>(*this, data_field);
 }
 bool DataField::GreaterThan(const DataField& data_field) {
+  if (cell->is_null() && data_field.cell->is_null()) {
+    return false;
+  } else if (cell->is_null()) {
+    return false;
+  } else if (data_field.cell->is_null()) {
+    return true;
+  }
   return data_field_compare<std::greater>(*this, data_field);
 }
 bool DataField::Equal(const DataField& data_field) {
+  if (cell->is_null() && data_field.cell->is_null()) {
+    return true;
+  } else if (cell->is_null()) {
+    return false;
+  } else if (data_field.cell->is_null()) {
+    return false;
+  }
   return data_field_compare<std::equal_to>(*this, data_field);
 }
 }

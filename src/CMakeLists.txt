@@ -6,6 +6,7 @@ ADD_LIBRARY(dataframe type/type.cpp type/type_visitor.cpp
 expression/alias_expression.cpp
 expression/expression.cpp expression/arithmetic_expression.cpp
 expression/predicate_expression.cpp column.cpp
-schema.cpp data_field.cpp data_frame.cpp)
+schema.cpp data_field.cpp data_frame.cpp
+expression/aggregate_expression.cpp)
 TARGET_LINK_LIBRARIES(dataframe libgtest.a 
 libglog.a libgflags.a dl librt.a libz.a dl pthread)

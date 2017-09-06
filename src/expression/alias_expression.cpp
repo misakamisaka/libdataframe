@@ -9,7 +9,7 @@
 namespace mortred {
 namespace expression{
 
-void ColumnExpr::Resolve(std::shared_ptr<Schema> schema) {
+void ColumnExpr::Resolve(const std::shared_ptr<Schema>& schema) {
   LeafExpression::Resolve(schema);
   index_ = schema->GetIndexByName(column_name_);
   data_type_ = schema->GetColumnByIndex(index_)->data_type();
@@ -24,7 +24,7 @@ std::shared_ptr<DataField> ColumnExpr::Eval(const std::shared_ptr<Row>& row) con
 std::shared_ptr<DataField> AliasExpr::Eval(const std::shared_ptr<Row>& row) const {
   return child_->Eval(row);
 }
-void ConstantExpr::Resolve(std::shared_ptr<Schema> schema) {
+void ConstantExpr::Resolve(const std::shared_ptr<Schema>& schema) {
   LeafExpression::Resolve(schema);
 }
 std::shared_ptr<DataField> ConstantExpr::Eval(const std::shared_ptr<Row>&) const {

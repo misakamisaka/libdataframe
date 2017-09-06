@@ -81,7 +81,7 @@ std::shared_ptr<DataField> AbsExpr::Eval(const std::shared_ptr<Row>& row) const 
   return ret;
 }
 
-void ArrayExpressionWithInputTypeCheck::Resolve(std::shared_ptr<Schema> schema) {
+void ArrayExpressionWithInputTypeCheck::Resolve(const std::shared_ptr<Schema>& schema) {
   ArrayExpression::Resolve(schema);
   data_type_ = children_[0]->data_type();
   for (auto& child: children_) {

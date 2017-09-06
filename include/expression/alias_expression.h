@@ -8,10 +8,10 @@ namespace expression {
 
 class ColumnExpr : public LeafExpression {
  public:
-  ColumnExpr(const std::string column_name)
+  ColumnExpr(const std::string& column_name)
     :LeafExpression(NodeType::COLUMN),
     column_name_(column_name) { }
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
     return "$" + column_name_;
@@ -46,7 +46,7 @@ class ConstantExpr : public LeafExpression {
     data_type_ = data_type;
     nullable_ = is_null;
   }
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
     return value_str_;

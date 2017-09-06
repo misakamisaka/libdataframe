@@ -35,10 +35,10 @@ class AbsExpr : public UnaryExpression {
 template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
 class BinaryArithmetic : public BinaryExpression {
  public:
-   BinaryArithmetic(std::shared_ptr<Expression> left,
-       std::shared_ptr<Expression> right)
-     : BinaryExpression(left, right, NodeTypeId) { }
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  BinaryArithmetic(std::shared_ptr<Expression> left,
+      std::shared_ptr<Expression> right)
+    : BinaryExpression(left, right, NodeTypeId) { }
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   //virtual void CheckInputDataTypes();
   virtual std::string ToString() {
@@ -81,7 +81,7 @@ class ModuloExpr : public BinaryArithmetic<std::modulus, true, NodeType::MOD> {
 
 class ArrayExpressionWithInputTypeCheck : public ArrayExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
 };
 
 class LeastExpr : public ArrayExpressionWithInputTypeCheck {
@@ -118,7 +118,7 @@ class GreatestExpr : public ArrayExpressionWithInputTypeCheck {
 
 template<template<typename T> class ArithmeticMethod, bool need_check_divide_by_zero, NodeType NodeTypeId>
 void BinaryArithmetic<ArithmeticMethod, need_check_divide_by_zero, NodeTypeId>::Resolve(
-    std::shared_ptr<Schema> schema) {
+    const std::shared_ptr<Schema>& schema) {
   BinaryExpression::Resolve(schema);
   data_type_ = DataTypes::FindTightesetCommonType(left_->data_type(), right_->data_type());
   //CheckInputDataTypes();

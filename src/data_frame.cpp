@@ -127,9 +127,9 @@ DataFrame& DataFrame::GroupBy(std::shared_ptr<Expression> expr) {
           cells.push_back(rows_[current]->at(col_idx));
         }
         for (size_t i = current; i < cursor; ++i) {
-          std::vector<boost::any> temp_value;
+          std::vector<std::shared_ptr<Cell>> temp_value;
           for (auto& grp_idx : group_index_vec) {
-            temp_value.push_back(rows_[current]->at(grp_idx)->value());
+            temp_value.push_back(rows_[current]->at(grp_idx));
           }
           cells.push_back(std::make_shared<Cell>(false, temp_value));
         }
@@ -239,6 +239,7 @@ DataFrame& DataFrame::Union(const DataFrame& df) {
   }
   return *this;
 }
+
 DataFrame& DataFrame::Dinstinct() {
   Sort();
   std::vector<std::shared_ptr<Row>> new_rows;
@@ -263,7 +264,7 @@ DataFrame& DataFrame::Dinstinct() {
   return *this;
 }
 //avg max min sum count first last
-//ArrayExpression(AliasExpression(AggExpression(ColumnExpression)), ...)
+//ArrayExpression(AliasExpression(AggExpression()), ...)
 //schema may change
 DataFrame& DataFrame::Agg(std::shared_ptr<Expression> expr) {
   try {
@@ -291,6 +292,7 @@ DataFrame& DataFrame::Agg(std::shared_ptr<Expression> expr) {
   }
   return *this;
 }
+
 void DataFrame::Sort() {
     std::stable_sort(rows_.begin(), rows_.end(), [this](const std::shared_ptr<Row>& row1, const std::shared_ptr<Row>& row2){
         size_t index = 0;
@@ -315,6 +317,7 @@ void DataFrame::Sort() {
         return (index!=size2);
     });
 }
+
 void DataFrame::SortByExpression(const std::shared_ptr<Expression>& expr) {
   ASSERT_EXPR_TYPE(expr, NodeType::ARRAY)
   for (auto& child : expr->GetChildren()) {
@@ -341,6 +344,7 @@ void DataFrame::SortByExpression(const std::shared_ptr<Expression>& expr) {
       });
   });
 }
+
 void DataFrame::MyJoin(DataFrame& left,
     DataFrame& right,
     const std::shared_ptr<Expression>& left_expr,

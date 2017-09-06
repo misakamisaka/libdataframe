@@ -12,7 +12,7 @@ class DataType;
 struct DataField {
   DataField() {}
   explicit DataField(const std::string& value);
-  DataField(std::shared_ptr<Cell> in_cell, std::shared_ptr<DataType> in_data_type)
+  DataField(std::shared_ptr<Cell> in_cell, const std::shared_ptr<DataType>& in_data_type)
     :cell(in_cell), data_type(in_data_type) {}
   std::shared_ptr<Cell> cell;
   std::shared_ptr<DataType> data_type;

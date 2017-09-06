@@ -20,7 +20,7 @@ class BinaryPredicate : public BinaryExpression, public BinaryPredicateResolvePo
    BinaryPredicate(std::shared_ptr<Expression> left,
        std::shared_ptr<Expression> right)
      : BinaryExpression(left, right, NodeTypeId) { }
-  virtual void Resolve(std::shared_ptr<Schema> schema) {
+  virtual void Resolve(const std::shared_ptr<Schema>& schema) {
     BinaryExpression::Resolve(schema);
     BinaryPredicateResolvePolicy::Resolve(schema, left_, right_);
   }
@@ -91,7 +91,7 @@ class NotEqualTo : public BinaryPredicate<std::not_equal_to, NodeType::NE, Compa
 
 class In : public BinaryExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
   }
@@ -99,7 +99,7 @@ class In : public BinaryExpression {
 
 class NotIn : public BinaryExpression {
  public:
-  virtual void Resolve(std::shared_ptr<Schema> schema);
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
   virtual std::string ToString() {
   }

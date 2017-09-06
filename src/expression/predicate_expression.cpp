@@ -25,12 +25,12 @@ void ComparisonPredicateResolvePolicy::Resolve(
   }
 }
 
-void In::Resolve(std::shared_ptr<Schema> schema) {
+void In::Resolve(const std::shared_ptr<Schema>& schema) {
 }
 std::shared_ptr<DataField> In::Eval(const std::shared_ptr<Row>&) const {
 }
 
-void NotIn::Resolve(std::shared_ptr<Schema> schema) {
+void NotIn::Resolve(const std::shared_ptr<Schema>& schema) {
 }
 std::shared_ptr<DataField> NotIn::Eval(const std::shared_ptr<Row>&) const {
 }
