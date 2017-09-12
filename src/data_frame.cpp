@@ -1,7 +1,9 @@
 #include "data_frame.h"
 #include <algorithm>
 #include <functional>
+#include <iomanip>
 #include <set>
+#include <sstream>
 
 #include <boost/any.hpp>
 
@@ -22,6 +24,8 @@ namespace mortred {
 
 using namespace expression;
 
+DataFrame::DataFrame(std::shared_ptr<Schema> schema, const std::vector<std::shared_ptr<Row>>& rows)
+  :schema_(schema), rows_(rows) { }
 //ArrayExpression(ColumnExpr, AliasExpr(ColumnExpr || ConstantExpr || Expression), ...)
 //schema may change
 DataFrame& DataFrame::Select(std::shared_ptr<Expression> expr) {
@@ -240,7 +244,7 @@ DataFrame& DataFrame::Union(const DataFrame& df) {
   return *this;
 }
 
-DataFrame& DataFrame::Dinstinct() {
+DataFrame& DataFrame::Distinct() {
   Sort();
   std::vector<std::shared_ptr<Row>> new_rows;
   auto first = rows_.begin();
@@ -351,6 +355,10 @@ void DataFrame::MyJoin(DataFrame& left,
     const std::shared_ptr<Expression>& right_expr,
     bool is_outer) {
   right.SortByExpression(right_expr);
+  std::vector<std::shared_ptr<Column>> new_columns(left.schema_->columns());
+  new_columns.insert(new_columns.end(), right.schema_->columns().begin(), right.schema_->columns().end());
+  std::shared_ptr<Schema> new_schema = std::make_shared<Schema>(new_columns);
+  std::vector<std::shared_ptr<Row>> new_rows;
   for (auto& row : left.rows_) {
     auto it = lower_bound(right.rows_.begin(),
         right.rows_.end(),
@@ -377,27 +385,43 @@ void DataFrame::MyJoin(DataFrame& left,
       [&left_expr, &right_expr](const std::shared_ptr<Row>& row1, const std::shared_ptr<Row>& row2){
         
         for (size_t i = 0; i < left_expr->GetChildren().size(); ++i) {
-          if (!right_expr->GetChildren()[i]->Eval(row1)->Equal(left_expr->GetChildren()[i]->Eval(row2))) {
+          if (!right_expr->GetChildren()[i]->Eval(row2)->Equal(left_expr->GetChildren()[i]->Eval(row1))) {
             return false;
           }
         }
         return true;
       };
-    std::vector<std::shared_ptr<Column>> new_columns(left.schema_->columns());
-    new_columns.insert(new_columns.end(), right.schema_->columns().begin(), right.schema_->columns().end());
-    std::shared_ptr<Schema> new_schema = std::make_shared<Schema>(new_columns);
-    std::vector<std::shared_ptr<Row>> new_rows;
     bool flag = true;
-    while (row_equal(row, *it)) {
+    while (it != right.rows_.end() && row_equal(row, *it)) {
       std::vector<std::shared_ptr<Cell>> cells(row->cells());
       cells.insert(cells.end(), (*it)->cells().begin(), (*it)->cells().end());
+      new_rows.push_back(std::make_shared<Row>(cells));
       flag = false;
       ++it;
     }
     if (is_outer && flag) {
       std::vector<std::shared_ptr<Cell>> cells(row->cells());
       cells.insert(cells.end(), right.schema_->columns().size(), std::make_shared<Cell>());
+      new_rows.push_back(std::make_shared<Row>(cells));
     }
+  }
+  schema_ = std::move(new_schema);
+  rows_ = std::move(new_rows);
+}
+void DataFrame::Print() {
+  std::ostringstream col_oss;
+  for (const auto& column : schema_->columns()) {
+    col_oss << std::setw(10) << column->name() +"(" + column->data_type()->ToString() + ")" << "|";
+  }
+  LOG(INFO) << col_oss.str();
+  for (auto& row: rows_) {
+    std::ostringstream row_oss;
+    for (size_t i = 0; i < row->size(); ++i) {
+      std::shared_ptr<DataType> data_type = schema_->GetColumnByIndex(i)->data_type();
+      DataField datafield(row->at(i), data_type);
+      row_oss << std::setw(10) <<  datafield.ToString() << "|";
+    }
+    LOG(INFO) << row_oss.str();
   }
 }
 }

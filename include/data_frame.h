@@ -28,19 +28,24 @@ class DataFrame {
   DataFrame& Where(std::shared_ptr<expression::Expression> expr);
   //ArrayExpression(ColumnExpr, ...)
   DataFrame& GroupBy(std::shared_ptr<expression::Expression> expr);
-  //ArrayExpression(PairExpression(ColumnExpr, ColumnExpr), ...)
+  //PairExpression(ArrayExpression(ColumnExpr, ColumnExpr), ...)
   DataFrame& Join(DataFrame& df,
       JoinType join_type,
       std::shared_ptr<expression::Expression> join_expr);
   //ArrayExpression(ColumnExpr, ...)
   DataFrame& OrderBy(std::shared_ptr<expression::Expression> expr);
   DataFrame& Union(const DataFrame& df);
-  DataFrame& Dinstinct();
+  DataFrame& Distinct();
   //avg max min sum count
   //ArrayExpression(PairExpression(ColumnExpr, AggExpression), ...)
   DataFrame& Agg(std::shared_ptr<expression::Expression> expr);
 
-  explicit DataFrame(std::shared_ptr<Schema> schema);
+  DataFrame(std::shared_ptr<Schema> schema, const std::vector<std::shared_ptr<Row>>& rows);
+
+  DataFrame(const DataFrame& dataframe)
+    :schema_(dataframe.schema_), rows_(dataframe.rows_) {}
+  
+  void Print();
  private:
   void Sort();
   void SortByExpression(const std::shared_ptr<expression::Expression>& expr);

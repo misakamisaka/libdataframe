@@ -1,6 +1,7 @@
 #include "data_field.h"
 #include "data_field_exception.h"
 #include "type/type.h"
+#include "type/type_converter.h"
 
 namespace mortred {
 
@@ -44,8 +45,14 @@ DataField::DataField(const std::string& value) {
   cell = std::make_shared<Cell>(false, value);
 }
 
-std::string DataField::ToString() {
-  return "";
+std::string DataField::ToString() const {
+  StringConverter str_converter(std::static_pointer_cast<StringType>(DataTypes::MakeStringType()));
+  std::shared_ptr<DataField> data_field = str_converter.ConvertFrom(*this);
+  if(data_field->cell->is_null()) {
+    return "NULL";
+  } else {
+    return boost::any_cast<std::string>(data_field->cell->value());
+  }
 }
 
 bool DataField::LessThan(const std::shared_ptr<DataField>& data_field) {
