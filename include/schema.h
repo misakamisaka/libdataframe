@@ -22,7 +22,7 @@ class Schema {
   std::shared_ptr<Column>& GetColumnByIndex(size_t index) { return columns_[index]; }
   const std::shared_ptr<Column>& GetColumnByIndex(size_t index) const { return columns_[index]; }
   std::shared_ptr<Column>& GetColumnByName(const std::string& name);
-  int GetIndexByName(const std::string& name);
+  size_t GetIndexByName(const std::string& name);
   bool Equals(std::shared_ptr<Schema> schema);
  private:
   std::vector<std::shared_ptr<Column>> columns_;

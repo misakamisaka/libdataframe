@@ -180,17 +180,14 @@ std::shared_ptr<DataField> NumericConverter<T>::ConvertFrom(const std::shared_pt
 }
 template<typename T>
 std::shared_ptr<DataField> NumericConverter<T>::ConvertFrom(const DataField& src) {
-  std::shared_ptr<DataField> ret = std::make_shared<DataField>();
-  ret->data_type = data_type_;
-  bool is_null = src.cell->is_null();
   boost::any value;
 
 #define NUMERIC_CASE(FIELD_TYPE, IN_TYPE) \
   case FIELD_TYPE:                        \
-    value = boost::any(static_cast<typename T::c_type>(boost::any_cast<IN_TYPE>(src.cell->value()))); \
+    value = boost::any(static_cast<typename T::c_type>(boost::any_cast<IN_TYPE>(src.cell()->value()))); \
     break;
 
-  switch (src.data_type->type) {
+  switch (src.data_type()->type) {
     NUMERIC_CASE(Type::BOOL, bool)
       NUMERIC_CASE(Type::UINT8, uint8_t)
       NUMERIC_CASE(Type::INT8, int8_t)
@@ -205,15 +202,14 @@ std::shared_ptr<DataField> NumericConverter<T>::ConvertFrom(const DataField& src
 
     case Type::STRING:
     case Type::BINARY:
-      value = boost::any(my_string_cast<typename T::c_type>(boost::any_cast<std::string>(src.cell->value())));
+      value = boost::any(my_string_cast<typename T::c_type>(boost::any_cast<std::string>(src.cell()->value())));
       break;
 
     default:
-      throw InvalidCast("unsupported cast [" + std::to_string(static_cast<typename std::underlying_type<Type>::type>(src.data_type->type)) + "] in numeric converter");
+      throw InvalidCast("unsupported cast [" + std::to_string(static_cast<typename std::underlying_type<Type>::type>(src.data_type()->type)) + "] in numeric converter");
   }
 #undef NUMERIC_CASE
-  ret->cell = std::make_shared<Cell>(is_null, value);
-  return ret;
+  return std::make_shared<DataField>(std::make_shared<Cell>(src.cell()->is_null(), value), data_type_);
 }
 
 class StringConverter : public BaseConverter {
@@ -221,17 +217,15 @@ class StringConverter : public BaseConverter {
   explicit StringConverter(const std::shared_ptr<StringType>& data_type) : data_type_(data_type) { }
   explicit StringConverter(const std::shared_ptr<BinaryType>& data_type) : data_type_(data_type) { }
   virtual std::shared_ptr<DataField> ConvertFrom(const DataField& src) override {
-    std::shared_ptr<DataField> ret = std::make_shared<DataField>();
-    ret->data_type = data_type_;
-    bool is_null = src.cell->is_null();
     boost::any value;
 
 #define NUMERIC_CASE(FIELD_TYPE, IN_TYPE) \
     case FIELD_TYPE:                      \
-      value = boost::any(std::to_string(boost::any_cast<IN_TYPE>(src.cell->value()))); \
+      value = boost::any(std::to_string(boost::any_cast<IN_TYPE>(src.cell()->value()))); \
       break;
 
-    switch (src.data_type->type) {
+        //LOG(INFO) << "adsfasdfadfasdfasdfxxxxxxx:" << static_cast<typename std::underlying_type<Type>::type>(src.data_type->type);
+    switch (src.data_type()->type) {
       NUMERIC_CASE(Type::BOOL, bool)
         NUMERIC_CASE(Type::UINT8, uint8_t)
         NUMERIC_CASE(Type::INT8, int8_t)
@@ -246,15 +240,27 @@ class StringConverter : public BaseConverter {
 
       case Type::STRING:
       case Type::BINARY:
-        value = src.cell->value();
+        value = src.cell()->value();
         break;
 
+      case Type::LIST: {
+        std::ostringstream oss;
+        std::vector<std::shared_ptr<Cell>> vec = boost::any_cast<std::vector<std::shared_ptr<Cell>>>(src.cell()->value());
+        oss << "(";
+        for (auto& cell : vec) {
+          oss << DataField(cell, std::static_pointer_cast<ListType>(src.data_type())->value_type()).ToString();
+          oss << ", ";
+        }
+        oss << ")";
+        value = oss.str();
+        break;
+      }
+
       default:
-        throw InvalidCast("unsupported cast [" + std::to_string(static_cast<typename std::underlying_type<Type>::type>(src.data_type->type)) + "] in string converter");
+        throw InvalidCast("unsupported cast [" + std::to_string(static_cast<typename std::underlying_type<Type>::type>(src.data_type()->type)) + "] in string converter");
     }
 #undef NUMERIC_CASE
-    ret->cell = std::make_shared<Cell>(is_null, value);
-    return ret;
+    return std::make_shared<DataField>(std::make_shared<Cell>(src.cell()->is_null(), value), data_type_);
   }
   virtual std::shared_ptr<DataField> ConvertFrom(const std::shared_ptr<DataField>& src) override {
       return ConvertFrom(*src);

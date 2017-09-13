@@ -130,10 +130,10 @@ DataFrame& DataFrame::GroupBy(std::shared_ptr<Expression> expr) {
         for (auto& col_idx : column_index_set) {
           cells.push_back(rows_[current]->at(col_idx));
         }
-        for (size_t i = current; i < cursor; ++i) {
+        for (auto& grp_idx : group_index_vec) {
           std::vector<std::shared_ptr<Cell>> temp_value;
-          for (auto& grp_idx : group_index_vec) {
-            temp_value.push_back(rows_[current]->at(grp_idx));
+          for (size_t i = current; i < cursor; ++i) {
+            temp_value.push_back(rows_[i]->at(grp_idx));
           }
           cells.push_back(std::make_shared<Cell>(false, temp_value));
         }
@@ -163,6 +163,9 @@ DataFrame& DataFrame::Join(DataFrame& df,
     std::shared_ptr<Expression> right_expr = pair_expr->right();
     ASSERT_EXPR_TYPE(left_expr, NodeType::ARRAY)
     ASSERT_EXPR_TYPE(right_expr, NodeType::ARRAY)
+    if (left_expr->GetChildren().size() != right_expr->GetChildren().size()) {
+      throw DataFrameException("join left column and right column size not match");
+    }
     left_expr->Resolve(schema_);
     right_expr->Resolve(df.schema_);
       //SortByExpression(std::make_shared<ArrayExpression>(left_table_columns));
@@ -355,8 +358,20 @@ void DataFrame::MyJoin(DataFrame& left,
     const std::shared_ptr<Expression>& right_expr,
     bool is_outer) {
   right.SortByExpression(right_expr);
+  std::set<size_t> right_duplicate_index;
+  for (size_t i = 0 ; i < left_expr->GetChildren().size(); ++i) {
+    std::shared_ptr<ColumnExpr> left_column_expr = std::static_pointer_cast<ColumnExpr>(left_expr->GetChildren()[i]);
+    std::shared_ptr<ColumnExpr> right_column_expr = std::static_pointer_cast<ColumnExpr>(right_expr->GetChildren()[i]);
+    if (left_column_expr->column_name() == right_column_expr->column_name()) {
+      right_duplicate_index.insert(right_column_expr->index());
+    }
+  }
   std::vector<std::shared_ptr<Column>> new_columns(left.schema_->columns());
-  new_columns.insert(new_columns.end(), right.schema_->columns().begin(), right.schema_->columns().end());
+  for (size_t i = 0; i < right.schema_->columns().size(); ++i) {
+    if (right_duplicate_index.find(i) == right_duplicate_index.end()) {
+      new_columns.push_back(right.schema_->columns()[i]);
+    }
+  }
   std::shared_ptr<Schema> new_schema = std::make_shared<Schema>(new_columns);
   std::vector<std::shared_ptr<Row>> new_rows;
   for (auto& row : left.rows_) {
@@ -394,14 +409,18 @@ void DataFrame::MyJoin(DataFrame& left,
     bool flag = true;
     while (it != right.rows_.end() && row_equal(row, *it)) {
       std::vector<std::shared_ptr<Cell>> cells(row->cells());
-      cells.insert(cells.end(), (*it)->cells().begin(), (*it)->cells().end());
+      for (size_t i = 0; i < (*it)->cells().size(); ++i) {
+        if (right_duplicate_index.find(i) == right_duplicate_index.end()) {
+          cells.push_back((*it)->cells()[i]);
+        }
+      }
       new_rows.push_back(std::make_shared<Row>(cells));
       flag = false;
       ++it;
     }
     if (is_outer && flag) {
       std::vector<std::shared_ptr<Cell>> cells(row->cells());
-      cells.insert(cells.end(), right.schema_->columns().size(), std::make_shared<Cell>());
+      cells.insert(cells.end(), right.schema_->columns().size() - right_duplicate_index.size(), std::make_shared<Cell>());
       new_rows.push_back(std::make_shared<Row>(cells));
     }
   }

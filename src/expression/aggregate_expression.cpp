@@ -1,4 +1,5 @@
 #include "expression/aggregate_expression.h"
+#include <glog/logging.h>
 #include "column.h"
 #include "expression/expression_exception.h"
 #include "row.h"
@@ -15,8 +16,8 @@ void AggregateExpression::Resolve(const std::shared_ptr<Schema>& schema) {
   index_ = schema->GetIndexByName(column_name_);
   data_type_ = schema->GetColumnByIndex(index_)->data_type();
   ASSERT_DATA_TYPE(data_type_, Type::LIST)
-  data_type_ = std::static_pointer_cast<ListType>(data_type_)->value_column()->data_type();
   nullable_ = std::static_pointer_cast<ListType>(data_type_)->value_column()->nullable();
+  data_type_ = std::static_pointer_cast<ListType>(data_type_)->value_column()->data_type();
 }
 std::shared_ptr<DataField> MaxExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> data_field = std::make_shared<DataField>();
@@ -127,7 +128,7 @@ std::shared_ptr<DataField> CountExpr::Eval(const std::shared_ptr<Row>& row) cons
   std::shared_ptr<DataField> data_field = std::make_shared<DataField>();
   data_field->data_type = data_type_;
   const auto& cell_vec = boost::any_cast<std::vector<std::shared_ptr<Cell>>>(row->at(index_)->value());
-  data_field->cell = std::make_shared<Cell>(false, cell_vec.size());
+  data_field->cell = std::make_shared<Cell>(false, (int64_t)cell_vec.size());
   return data_field;
 }
 }

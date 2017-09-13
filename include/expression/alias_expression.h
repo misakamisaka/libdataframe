@@ -17,16 +17,16 @@ class ColumnExpr : public LeafExpression {
     return "$" + column_name_;
   }
   std::string column_name() const { return column_name_; }
-  int index() const { return index_; }
+  size_t index() const { return index_; }
  private:
   std::string column_name_;
-  int index_;
+  size_t index_;
 };
 
 class AliasExpr : public UnaryExpression {
  public:
   AliasExpr(std::shared_ptr<Expression> child, const std::string alias_name)
-    :UnaryExpression(child, NodeType::COLUMN),
+    :UnaryExpression(child, NodeType::ALIAS),
     alias_name_(alias_name) { }
   virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
   virtual std::string ToString() {
