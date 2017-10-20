@@ -110,12 +110,10 @@ std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPr
   std::shared_ptr<DataField> left_data_field = left_->Eval(row);
   std::shared_ptr<DataField> right_data_field = right_->Eval(row);
   std::shared_ptr<DataField> ret = std::make_shared<DataField>();
-  bool is_null = left_data_field->cell->is_null() || right_data_field->cell->is_null();
+  bool is_null = left_data_field->cell()->is_null() || right_data_field->cell()->is_null();
   boost::any value;
-  ret->data_type = data_type_;
   if (is_null) {
-    ret->cell = std::make_shared<Cell>(is_null, value);
-    return ret;
+    return std::make_shared<DataField>(std::make_shared<Cell>(is_null, value), data_type_);
   }
   std::shared_ptr<DataType> common_type = DataTypes::FindTightesetCommonType(left_->data_type(), right_->data_type());
   left_data_field = type_cast(common_type, left_data_field);
@@ -123,8 +121,8 @@ std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPr
 
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                                         \
   case FIELD_TYPE: {                                                               \
-    C_TYPE left_value = boost::any_cast<C_TYPE>(left_data_field->cell->value());   \
-    C_TYPE right_value = boost::any_cast<C_TYPE>(right_data_field->cell->value()); \
+    C_TYPE left_value = boost::any_cast<C_TYPE>(left_data_field->cell()->value());   \
+    C_TYPE right_value = boost::any_cast<C_TYPE>(right_data_field->cell()->value()); \
     value = PredicateMethod<C_TYPE>{}(left_value, right_value);                    \
     break;                                                                         \
   }
@@ -146,8 +144,7 @@ std::shared_ptr<DataField> BinaryPredicate<PredicateMethod, NodeTypeId, BinaryPr
   }
 
 #undef PRIMITIVE_CASE
-  ret->cell = std::make_shared<Cell>(is_null, value);
-  return ret;
+  return std::make_shared<DataField>(std::make_shared<Cell>(is_null, value), data_type_);
 }
 
 } //namespace expression

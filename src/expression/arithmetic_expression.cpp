@@ -6,17 +6,14 @@ namespace mortred {
 namespace expression {
 std::shared_ptr<DataField> UnaryMinusExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> child_data_field = child_->Eval(row);
-  std::shared_ptr<DataField> ret = make_shared<DataField>();
-  bool is_null = child_data_field->cell->is_null();
+  bool is_null = child_data_field->cell()->is_null();
   boost::any value;
-  ret->data_type = data_type_;
   if (is_null) {
-    ret->cell = make_shared<Cell>(is_null, value);
-    return ret;
+    return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
   }
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                                       \
   case FIELD_TYPE: {                                                             \
-    value = -boost::any_cast<C_TYPE>(child_data_field->cell->value());  \
+    value = -boost::any_cast<C_TYPE>(child_data_field->cell()->value());  \
     break;                                                                       \
   }
 
@@ -38,23 +35,19 @@ std::shared_ptr<DataField> UnaryMinusExpr::Eval(const std::shared_ptr<Row>& row)
 
 #undef PRIMITIVE_CASE
 
-  ret->cell = make_shared<Cell>(is_null, value);
-  return ret;
+  return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
 }
 
 std::shared_ptr<DataField> AbsExpr::Eval(const std::shared_ptr<Row>& row) const {
   std::shared_ptr<DataField> child_data_field = child_->Eval(row);
-  std::shared_ptr<DataField> ret = make_shared<DataField>();
-  bool is_null = child_data_field->cell->is_null();
+  bool is_null = child_data_field->cell()->is_null();
   boost::any value;
-  ret->data_type = data_type_;
   if (is_null) {
-    ret->cell = make_shared<Cell>(is_null, value);
-    return ret;
+    return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
   }
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                                       \
   case FIELD_TYPE: {                                                             \
-    C_TYPE tmp_value = boost::any_cast<C_TYPE>(child_data_field->cell->value());   \
+    C_TYPE tmp_value = boost::any_cast<C_TYPE>(child_data_field->cell()->value());   \
     value = (tmp_value >= 0)? tmp_value : -tmp_value;                 \
     break;                                                                       \
   }
@@ -77,8 +70,7 @@ std::shared_ptr<DataField> AbsExpr::Eval(const std::shared_ptr<Row>& row) const 
 
 #undef PRIMITIVE_CASE
 
-  ret->cell = make_shared<Cell>(is_null, value);
-  return ret;
+  return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
 }
 
 void ArrayExpressionWithInputTypeCheck::Resolve(const std::shared_ptr<Schema>& schema) {
@@ -97,13 +89,10 @@ std::shared_ptr<DataField> LeastExpr::Eval(const std::shared_ptr<Row>& row) cons
     data_fields.push_back(child->Eval(row));
   }
 
-  std::shared_ptr<DataField> ret = make_shared<DataField>();
-  bool is_null = std::any_of(data_fields.begin(), data_fields.end(), [](const std::shared_ptr<DataField> data_field) { return data_field->cell->is_null(); });
+  bool is_null = std::any_of(data_fields.begin(), data_fields.end(), [](const std::shared_ptr<DataField> data_field) { return data_field->cell()->is_null(); });
   boost::any value;
-  ret->data_type = data_type_;
   if (is_null) {
-    ret->cell = make_shared<Cell>(is_null, value);
-    return ret;
+    return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
   }
 
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                         \
@@ -111,7 +100,7 @@ std::shared_ptr<DataField> LeastExpr::Eval(const std::shared_ptr<Row>& row) cons
     C_TYPE tmp_value = std::numeric_limits<C_TYPE>::max();         \
     for (auto& data_field: data_fields) {                          \
       tmp_value = std::min<C_TYPE>(tmp_value,                      \
-          boost::any_cast<C_TYPE>(data_field->cell->value()));     \
+          boost::any_cast<C_TYPE>(data_field->cell()->value()));     \
     }                                                              \
     value = tmp_value;                                             \
     break;                                                         \
@@ -135,8 +124,7 @@ std::shared_ptr<DataField> LeastExpr::Eval(const std::shared_ptr<Row>& row) cons
 
 #undef PRIMITIVE_CASE
 
-  ret->cell = make_shared<Cell>(is_null, value);
-  return ret;
+  return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
 }
 
 std::shared_ptr<DataField> GreatestExpr::Eval(const std::shared_ptr<Row>& row) const{
@@ -144,14 +132,11 @@ std::shared_ptr<DataField> GreatestExpr::Eval(const std::shared_ptr<Row>& row) c
   for (auto& child : children_) {
     data_fields.push_back(child->Eval(row));
   }
-  std::shared_ptr<DataField> ret = make_shared<DataField>();
 
-  bool is_null = std::any_of(data_fields.begin(), data_fields.end(), [](const std::shared_ptr<DataField> data_field) { return data_field->cell->is_null(); });
+  bool is_null = std::any_of(data_fields.begin(), data_fields.end(), [](const std::shared_ptr<DataField> data_field) { return data_field->cell()->is_null(); });
   boost::any value;
-  ret->data_type = data_type_;
   if (is_null) {
-    ret->cell = make_shared<Cell>(is_null, value);
-    return ret;
+    return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
   }
 
 #define PRIMITIVE_CASE(FIELD_TYPE, C_TYPE)                         \
@@ -159,7 +144,7 @@ std::shared_ptr<DataField> GreatestExpr::Eval(const std::shared_ptr<Row>& row) c
     C_TYPE tmp_value = std::numeric_limits<C_TYPE>::min();         \
     for (auto& data_field: data_fields) {                          \
       tmp_value = std::max<C_TYPE>(tmp_value,                      \
-          boost::any_cast<C_TYPE>(data_field->cell->value()));     \
+          boost::any_cast<C_TYPE>(data_field->cell()->value()));     \
     }                                                              \
     value = tmp_value;                                  \
     break;                                                         \
@@ -183,8 +168,7 @@ std::shared_ptr<DataField> GreatestExpr::Eval(const std::shared_ptr<Row>& row) c
 
 #undef PRIMITIVE_CASE
 
-  ret->cell = make_shared<Cell>(is_null, value);
-  return ret;
+  return make_shared<DataField>(make_shared<Cell>(is_null, value), data_type_);
 }
 }
 }

@@ -56,7 +56,7 @@ DataFrame& DataFrame::Select(std::shared_ptr<Expression> expr) {
     for (auto& row : rows_) {
       std::vector<std::shared_ptr<Cell>> cells;
       for (auto& child : expr->GetChildren()) {
-        cells.push_back(child->Eval(row)->cell);
+        cells.push_back(child->Eval(row)->cell());
       }
       new_rows.push_back(std::make_shared<Row>(cells));
     }
@@ -76,7 +76,7 @@ DataFrame& DataFrame::Where(std::shared_ptr<Expression> expr) {
     std::vector<std::shared_ptr<Row>> new_rows;
     for (auto &row : rows_) {
       std::shared_ptr<DataField> predicate_result = expr->Eval(row);
-      if (boost::any_cast<bool>(predicate_result->cell->value())) {
+      if (boost::any_cast<bool>(predicate_result->cell()->value())) {
         new_rows.push_back(std::move(row));
       }
     }
@@ -288,7 +288,7 @@ DataFrame& DataFrame::Agg(std::shared_ptr<Expression> expr) {
     for (auto& row : rows_) {
       std::vector<std::shared_ptr<Cell>> cells(row->cells());
       for (auto& child : expr->GetChildren()) {
-        cells.push_back(child->Eval(row)->cell);
+        cells.push_back(child->Eval(row)->cell());
       }
       new_rows.push_back(std::make_shared<Row>(cells));
     }
