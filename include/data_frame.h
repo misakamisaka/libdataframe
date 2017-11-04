@@ -22,7 +22,7 @@ enum class JoinType {
 
 class DataFrame {
  public:
-  //ArrayExpression(ColumnExpr, AliasExpr(ColumnExpr || ConstantExpr || Expression), ...)
+  //ArrayExpression(ColumnExpr, AliasExpr(ColumnExpr || ConstantExpr || Expression), CastExpr(ColumnExpr || ...),...)
   DataFrame& Select(std::shared_ptr<expression::Expression> expr);
   //PredicateExpression
   DataFrame& Where(std::shared_ptr<expression::Expression> expr);
@@ -46,6 +46,12 @@ class DataFrame {
     :schema_(dataframe.schema_), rows_(dataframe.rows_) {}
   
   void Print();
+  std::vector<std::shared_ptr<Row>> rows() {
+    return rows_;
+  }
+  std::shared_ptr<Schema> schema() {
+    return schema_;
+  }
  private:
   void Sort();
   void SortByExpression(const std::shared_ptr<expression::Expression>& expr);

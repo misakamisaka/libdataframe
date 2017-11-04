@@ -70,7 +70,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<AddExpr> expression = std::make_shared<AddExpr>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_EQ(boost::any_cast<int64_t>(result->cell->value()), 1234 + 56);
+        ASSERT_EQ(boost::any_cast<int64_t>(result->cell()->value()), 1234 + 56);
     }
     //test int constant add constant
     {
@@ -79,7 +79,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<AddExpr> expression = std::make_shared<AddExpr>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_EQ(boost::any_cast<int64_t>(result->cell->value()), 78 + 56);
+        ASSERT_EQ(boost::any_cast<int64_t>(result->cell()->value()), 78 + 56);
     }
     //test int constant add constant
     {
@@ -88,7 +88,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<AddExpr> expression = std::make_shared<AddExpr>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_EQ(boost::any_cast<int64_t>(result->cell->value()), 78 + 123);
+        ASSERT_EQ(boost::any_cast<int64_t>(result->cell()->value()), 78 + 123);
     }
 
     //test int constant add double constant
@@ -98,7 +98,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<AddExpr> expression = std::make_shared<AddExpr>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_EQ(boost::any_cast<double>(result->cell->value()), 78.3 + 123);
+        ASSERT_EQ(boost::any_cast<double>(result->cell()->value()), 78.3 + 123);
     }
     //test double param add int param
     {
@@ -107,7 +107,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<AddExpr> expression = std::make_shared<AddExpr>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_EQ(boost::any_cast<double>(result->cell->value()), 25.1123 + 56);
+        ASSERT_EQ(boost::any_cast<double>(result->cell()->value()), 25.1123 + 56);
     }
 
     {
@@ -116,7 +116,7 @@ TEST_F(ExpressionTest, test_add) {
         std::shared_ptr<GreaterThan> expression = std::make_shared<GreaterThan>(param1, param2);
         expression->Resolve(schema);
         std::shared_ptr<DataField> result = expression->Eval(row);
-        ASSERT_TRUE(boost::any_cast<bool>(result->cell->value()));
+        ASSERT_TRUE(boost::any_cast<bool>(result->cell()->value()));
     }
     {
         std::shared_ptr<ColumnExpr> param1 = std::make_shared<ColumnExpr>("A");
@@ -125,7 +125,7 @@ TEST_F(ExpressionTest, test_add) {
         BinaryPredicate<std::less_equal, NodeType::LE, ComparisonPredicateResolvePolicy> expression(param1, param2);
         expression.Resolve(schema);
         std::shared_ptr<DataField> result = expression.Eval(row);
-        ASSERT_TRUE(boost::any_cast<bool>(result->cell->value()));
+        ASSERT_TRUE(boost::any_cast<bool>(result->cell()->value()));
     }
 
 }

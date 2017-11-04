@@ -31,8 +31,9 @@ inline bool data_field_compare(const DataField& left_data_field,
     PRIMITIVE_CASE(Type::INT64, int64_t)
     PRIMITIVE_CASE(Type::FLOAT, float)
     PRIMITIVE_CASE(Type::DOUBLE, double)
+    PRIMITIVE_CASE(Type::STRING, std::string)
     default:
-      throw DataFieldException("unsupported Arithmetic, type[ " +
+      throw DataFieldException("unsupported data field compare, type[ " +
           std::to_string(static_cast<typename std::underlying_type<Type>::type>(left_data_field.data_type()->type)) + "]");
   }
 
@@ -46,11 +47,8 @@ DataField::DataField(const std::string& value) {
 }
 
 std::string DataField::ToString() const {
-        //LOG(INFO) << "asdasdaaaxxx0";
   StringConverter str_converter(std::static_pointer_cast<StringType>(DataTypes::MakeStringType()));
-        //LOG(INFO) << "asdasdaaaxxx1";
   std::shared_ptr<DataField> data_field = str_converter.ConvertFrom(*this);
-        //LOG(INFO) << "asdasdaaaxxx2" << boost::any_cast<std::string>(data_field->cell->value());
   if(data_field->cell_->is_null()) {
     return "NULL";
   } else {

@@ -6,6 +6,7 @@
 #include "expression/arithmetic_expression.h"
 #include "expression/predicate_expression.h"
 #include "expression/aggregate_expression.h"
+#include "expression/type_cast_expression.h"
 #include "boost/any.hpp"
 #include "row.h"
 #include "schema.h"
@@ -165,6 +166,9 @@ TEST_F(ExpressionTest, test_add) {
   dataframe->GroupBy(std::make_shared<ArrayExpression>(std::vector<std::shared_ptr<Expression>>({std::make_shared<ColumnExpr>("A")})));
   dataframe->Print();
   dataframe->Agg(std::make_shared<ArrayExpression>(std::vector<std::shared_ptr<Expression>>({std::make_shared<AliasExpr>(std::make_shared<AvgExpr>("D"), "GG"), std::make_shared<AliasExpr>(std::make_shared<MaxExpr>("asdasd"), "asdasdaaa"), std::make_shared<AliasExpr>(std::make_shared<SumExpr>("asdasd"), "asdasdaaagg"), std::make_shared<AliasExpr>(std::make_shared<CountExpr>("asdasd"), "axxsdasdaaa"), std::make_shared<AliasExpr>(std::make_shared<FirstExpr>("asdasd"), "gfsdgasdasdaaa")})));
+
+  dataframe->Print();
+  dataframe->Select(std::make_shared<ArrayExpression>(std::vector<std::shared_ptr<Expression>>({std::make_shared<TypeCastExpr>(std::make_shared<ColumnExpr>("GG"),"XX",DataTypes::MakeStringType())})));
 
   dataframe->Print();
 /*
