@@ -8,6 +8,7 @@ namespace mortred {
 
 class Schema;
 class Row;
+class Column;
 
 namespace expression {
 class Expression;
@@ -24,6 +25,8 @@ class DataFrame {
  public:
   //ArrayExpression(ColumnExpr, AliasExpr(ColumnExpr || ConstantExpr || Expression), CastExpr(ColumnExpr || ...),...)
   DataFrame& Select(std::shared_ptr<expression::Expression> expr);
+  
+  DataFrame& WithColumn(const std::shared_ptr<Column>& column, std::shared_ptr<expression::Expression> expr);
   //PredicateExpression
   DataFrame& Where(std::shared_ptr<expression::Expression> expr);
   //ArrayExpression(ColumnExpr, ...)

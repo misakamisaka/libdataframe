@@ -3,7 +3,34 @@
 
 namespace mortred {
 namespace expression {
-std::shared_ptr<DataField> Not::Eval(const std::shared_ptr<Row>&) const {
+void Not::Resolve(const std::shared_ptr<Schema>& schema) {
+  UnaryExpression::Resolve(schema);
+  if (child_->data_type()->type != Type::BOOL) {
+      throw ExpressionException("type of child of Not must be BOOL");
+  }
+}
+std::shared_ptr<DataField> Not::Eval(const std::shared_ptr<Row>& row) const {
+  std::shared_ptr<DataField> data_field = child_->Eval(row);
+  boost::any value;
+  if (data_field->cell()->is_null()) {
+    return std::make_shared<DataField>(std::make_shared<Cell>(true, value), data_type_);
+  }
+  value = !(boost::any_cast<bool>(data_field->cell()->value()));
+  return std::make_shared<DataField>(std::make_shared<Cell>(false, value), data_type_);
+}
+
+void IsNull::Resolve(const std::shared_ptr<Schema>& schema) {
+  UnaryExpression::Resolve(schema);
+  data_type_ = DataTypes::MakeBooleanType();
+  nullable_ = false;
+}
+std::shared_ptr<DataField> IsNull::Eval(const std::shared_ptr<Row>& row) const {
+  std::shared_ptr<DataField> data_field = child_->Eval(row);
+  if (data_field->cell()->is_null()) {
+    return std::make_shared<DataField>(std::make_shared<Cell>(false, true), data_type_);
+  } else {
+    return std::make_shared<DataField>(std::make_shared<Cell>(false, false), data_type_);
+  }
 }
 
 void LogicalPredicateResolvePolicy::Resolve(

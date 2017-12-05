@@ -32,29 +32,29 @@ DataFrame::DataFrame(std::shared_ptr<Schema> schema, const std::vector<std::shar
 DataFrame& DataFrame::Select(std::shared_ptr<Expression> expr) {
   try {
     ASSERT_EXPR_TYPE(expr, NodeType::ARRAY)
-    expr->Resolve(schema_);
+      expr->Resolve(schema_);
     std::vector<std::shared_ptr<Column>> new_columns;
     for (auto& child : expr->GetChildren()) {
       switch (child->node_type()) {
         case NodeType::COLUMN: {
-          std::shared_ptr<ColumnExpr> column_expr = std::static_pointer_cast<ColumnExpr>(child);
-          new_columns.push_back(std::make_shared<Column>(column_expr->column_name(), column_expr->data_type(), column_expr->nullable()));
-          break;
-        }
+                                 std::shared_ptr<ColumnExpr> column_expr = std::static_pointer_cast<ColumnExpr>(child);
+                                 new_columns.push_back(std::make_shared<Column>(column_expr->column_name(), column_expr->data_type(), column_expr->nullable()));
+                                 break;
+                               }
         case NodeType::CONVERT: {
-          std::shared_ptr<TypeCastExpr> type_cast_expr = std::static_pointer_cast<TypeCastExpr>(child);
-          new_columns.push_back(std::make_shared<Column>(type_cast_expr->column_name(), type_cast_expr->data_type(), type_cast_expr->nullable()));
-          break;
-        }
+                                  std::shared_ptr<TypeCastExpr> type_cast_expr = std::static_pointer_cast<TypeCastExpr>(child);
+                                  new_columns.push_back(std::make_shared<Column>(type_cast_expr->column_name(), type_cast_expr->data_type(), type_cast_expr->nullable()));
+                                  break;
+                                }
         case NodeType::ALIAS: {
-          std::shared_ptr<AliasExpr> alias_expr = std::static_pointer_cast<AliasExpr>(child);
-          new_columns.push_back(std::make_shared<Column>(alias_expr->alias_name(), alias_expr->data_type(), alias_expr->nullable()));
-          break;
-        }
+                                std::shared_ptr<AliasExpr> alias_expr = std::static_pointer_cast<AliasExpr>(child);
+                                new_columns.push_back(std::make_shared<Column>(alias_expr->alias_name(), alias_expr->data_type(), alias_expr->nullable()));
+                                break;
+                              }
         default: {
-          LOG(INFO) << "not supported expression type";
-          throw DataFrameException("not supported expression type");
-        }
+                   LOG(INFO) << "not supported expression type";
+                   throw DataFrameException("not supported expression type");
+                 }
       }
     }
     std::shared_ptr<Schema> new_schema = std::make_shared<Schema>(new_columns);
@@ -65,6 +65,46 @@ DataFrame& DataFrame::Select(std::shared_ptr<Expression> expr) {
         cells.push_back(child->Eval(row)->cell());
       }
       new_rows.push_back(std::make_shared<Row>(cells));
+    }
+    schema_ = std::move(new_schema);
+    rows_ = std::move(new_rows);
+  } catch (MortredException& e) {
+    throw DataFrameException(e.what());
+  }
+  return *this;
+}
+DataFrame& DataFrame::WithColumn(const std::shared_ptr<Column>& column, std::shared_ptr<expression::Expression> expr) {
+  try {
+    expr->Resolve(schema_);
+    std::vector<std::shared_ptr<Column>> new_columns;
+    const std::vector<std::shared_ptr<Column>>& old_columns = schema_->columns();
+    auto it = find_if(old_columns.begin(), old_columns.end(), [&column](std::shared_ptr<Column> old_column) {
+                                                                return column->name() == old_column->name();
+                                                              });
+    int replace_index = -1;
+    for (int i = 0; i < old_columns.size(); ++i) {
+      if (column->name() == old_columns[i]->name()) {
+        new_columns.push_back(column);
+        replace_index = i;
+      } else {
+        new_columns.push_back(old_columns[i]);
+      }
+    }
+    if (replace_index == -1) {
+      new_columns.push_back(column);
+    }
+    std::shared_ptr<Schema> new_schema = std::make_shared<Schema>(new_columns);
+    std::vector<std::shared_ptr<Row>> new_rows;
+    for (auto& row : rows_) {
+      if (replace_index != -1) {
+        std::vector<std::shared_ptr<Cell>> cells = row->cells();
+        cells[replace_index] = expr->Eval(row)->cell();
+        new_rows.push_back(std::make_shared<Row>(std::move(cells)));
+      } else {
+        std::vector<std::shared_ptr<Cell>> cells = row->cells();
+        cells.push_back(expr->Eval(row)->cell());
+        new_rows.push_back(std::make_shared<Row>(std::move(cells)));
+      }
     }
     schema_ = std::move(new_schema);
     rows_ = std::move(new_rows);

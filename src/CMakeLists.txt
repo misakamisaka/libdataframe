@@ -8,6 +8,7 @@ expression/expression.cpp expression/arithmetic_expression.cpp
 expression/predicate_expression.cpp column.cpp
 schema.cpp data_field.cpp data_frame.cpp
 expression/aggregate_expression.cpp
+expression/conditional_expression.cpp
 expression/type_cast_expression.cpp)
 TARGET_LINK_LIBRARIES(dataframe libgtest.a 
 libglog.a libgflags.a dl librt.a libz.a dl pthread)

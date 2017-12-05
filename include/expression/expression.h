@@ -26,6 +26,7 @@ enum class NodeType {
     BIT_XOR,                // ^
     COLUMN,
     CONDITIONAL,        // ?:
+    CASE_WHEN,
     CONSTANT,
     CONVERT,
     DEC,                // --
@@ -33,6 +34,7 @@ enum class NodeType {
     EQ,                 // ==
     GT,                 // >
     GE,                 // >=
+    IF,
     IN,
     INC,                //++
     IS_FALSE,

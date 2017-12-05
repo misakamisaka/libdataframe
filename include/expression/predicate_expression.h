@@ -11,7 +11,24 @@ namespace expression {
 
 class Not : public UnaryExpression {
  public:
-  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>&) const;
+  Not(std::shared_ptr<Expression> child)
+    :UnaryExpression(child, NodeType::NOT) { }
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
+  virtual std::string ToString() {
+    return "NOT " + child_->ToString();
+  }
+};
+
+class IsNull : public UnaryExpression {
+ public:
+  IsNull(std::shared_ptr<Expression> child)
+    :UnaryExpression(child, NodeType::IS_NULL) { }
+  virtual void Resolve(const std::shared_ptr<Schema>& schema);
+  virtual std::shared_ptr<DataField> Eval(const std::shared_ptr<Row>& row) const;
+  virtual std::string ToString() {
+    return "IsNull(" + child_->ToString() + ")";
+  }
 };
 
 template<template<typename T> class PredicateMethod, NodeType NodeTypeId, typename BinaryPredicateResolvePolicy>
